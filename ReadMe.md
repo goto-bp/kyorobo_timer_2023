@@ -34,6 +34,4 @@ escキーで最初の画面に戻る
 ## 更新情報
 
 
-pyinstaller .\main.py
-
-https://qiita.com/key353/items/e59927dcf20916f9d4ac
+cxfreeze
