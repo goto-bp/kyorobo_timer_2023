@@ -1,0 +1,25 @@
+{
+    "leftTeam" : "左チーム",
+    "rightTeam" : "右チーム",
+    "score" : 5,
+    "time" : {
+        "min" : 2,
+        "sec" : 30
+    },
+    "isSwap" : false,
+    "key" : {
+        "left" : {
+            "up" : "w",
+            "down" : "s",
+            "nup" : "d",
+            "ndown" : "a"
+        },
+        "right" : {
+            "up" : "up",
+            "down" : "down",
+            "nup" : "right",
+            "ndown" : "left"
+        }
+
+    }
+}

@@ -1,5 +1,6 @@
 import tkinter as tk
 # import pyaudio
+# import winsound
 
 DEFAULT_FONT = "Meiryo"
 
@@ -25,6 +26,65 @@ class KyoroboTimer:
 
     __left_team_name = "大分A"
     __right_team_name = "八代B"
+
+    def __init__(self, resolution, font, title):
+        self.__resolution = resolution
+        self.__font = font
+        self.__title = title
+
+        self.root = tk.Tk()
+        self.root.title(self.__title)
+        self.root.geometry(f"{self.__resolution[0]}x{self.__resolution[1]}")
+
+        self.timer_screen = tk.Frame(self.root,
+                                    bg="#222222")
+        self.timer_screen.pack(fill=tk.BOTH,
+                            expand=True)
+
+        self.left_team_point = tk.Frame(self.timer_screen,
+                                        bg="red")
+        
+        self.right_team_point = tk.Frame(self.timer_screen,
+                                        bg="blue")
+        
+        self.left_team_name = tk.Frame(self.timer_screen,
+                                        bg="black")
+        
+        self.right_team_name = tk.Frame(self.timer_screen,
+                                        bg="black")
+        
+        self.time_label = tk.Frame(self.timer_screen,
+                            bg="#222222")
+        
+        self.left_team_point_label = tk.Label(self.left_team_point,
+                                            text="0",
+                                            font=(self.__font, 0),
+                                            fg="white",
+                                            bg=self.left_team_point.cget("bg"))
+        
+        self.right_team_point_label = tk.Label(self.right_team_point,
+                                            text="0",
+                                            font=(self.__font, 0),
+                                            fg="white",
+                                            bg=self.right_team_point.cget("bg"))
+        
+        self.left_team_name_label = tk.Label(self.left_team_name,
+                                            text=self.__left_team_name,
+                                            font=self.__font,
+                                            fg="white",
+                                            bg=self.left_team_name.cget("bg"))
+        
+        self.right_team_name_label = tk.Label(self.right_team_name,
+                                            text=self.__right_team_name,
+                                            font=self.__font,
+                                            fg="white",
+                                            bg=self.right_team_name.cget("bg"))
+        
+        self.time_label_label = tk.Label(self.time_label,
+                                            text=str(self.__min) + ":" + str(self.__sec).zfill(2),
+                                            font=self.__font,
+                                            fg="white",
+                                            bg=self.time_label.cget("bg"))
 
     def count_down(self):
         if(self.__time > 0):
@@ -73,6 +133,13 @@ class KyoroboTimer:
         if(e.keysym == "F11"):
             self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen"))
 
+        if(e.keysym == "r"):
+            if(self.timer_screen.winfo_ismapped()):
+                self.timer_screen.pack_forget()
+            else:
+                self.timer_screen.pack(fill=tk.BOTH,
+                               expand=True)
+
         if(e.keysym == "w"):
             self.left_team_point_label.config(text=str(int(self.left_team_point_label.cget("text")) + 1))
         if(e.keysym == "s"):
@@ -100,61 +167,9 @@ class KyoroboTimer:
             else:
                 self.right_team_point_label.config(text=str(int(self.right_team_point_label.cget("text")) - self.__point))
 
-    def __init__(self, resolution, font, title):
-        self.__resolution = resolution
-        self.__font = font
-        self.__title = title
-
-        self.root = tk.Tk()
-        self.root.title(self.__title)
-        self.root.geometry(f"{self.__resolution[0]}x{self.__resolution[1]}")
-
-        self.left_team_point = tk.Frame(self.root,
-                                        bg="red")
-        
-        self.right_team_point = tk.Frame(self.root,
-                                        bg="blue")
-        
-        self.left_team_name = tk.Frame(self.root,
-                                        bg="black")
-        
-        self.right_team_name = tk.Frame(self.root,
-                                        bg="black")
-        
-        self.time_label = tk.Frame(self.root,
-                            bg="#222222")
-        
-        self.left_team_point_label = tk.Label(self.left_team_point,
-                                            text="0",
-                                            font=(self.__font, 0),
-                                            fg="white",
-                                            bg=self.left_team_point.cget("bg"))
-        
-        self.right_team_point_label = tk.Label(self.right_team_point,
-                                            text="0",
-                                            font=(self.__font, 0),
-                                            fg="white",
-                                            bg=self.right_team_point.cget("bg"))
-        
-        self.left_team_name_label = tk.Label(self.left_team_name,
-                                            text=self.__left_team_name,
-                                            font=self.__font,
-                                            fg="white",
-                                            bg=self.left_team_name.cget("bg"))
-        
-        self.right_team_name_label = tk.Label(self.right_team_name,
-                                            text=self.__right_team_name,
-                                            font=self.__font,
-                                            fg="white",
-                                            bg=self.right_team_name.cget("bg"))
-        
-        self.time_label_label = tk.Label(self.time_label,
-                                            text=str(self.__min) + ":" + str(self.__sec).zfill(2),
-                                            font=self.__font,
-                                            fg="white",
-                                            bg=self.time_label.cget("bg"))
-                                                
     def run(self):
+
+
         self.left_team_point.grid(row=0, column=0,
                             sticky=tk.NSEW)
 
@@ -189,12 +204,12 @@ class KyoroboTimer:
                                         anchor=tk.CENTER)
                                         
 
-        self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_columnconfigure(1, weight=1)
+        self.timer_screen.grid_columnconfigure(0, weight=1)
+        self.timer_screen.grid_columnconfigure(1, weight=1)
 
-        self.root.grid_rowconfigure(0, weight=4)
-        self.root.grid_rowconfigure(1, weight=1)
-        self.root.grid_rowconfigure(2, weight=5)
+        self.timer_screen.grid_rowconfigure(0, weight=4)
+        self.timer_screen.grid_rowconfigure(1, weight=1)
+        self.timer_screen.grid_rowconfigure(2, weight=5)
 
         self.root.bind("<KeyPress>", self.key_event)
 
