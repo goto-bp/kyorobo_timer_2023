@@ -3,8 +3,8 @@
     "rightTeam" : "右チーム",
     "score" : 5,
     "time" : {
-        "min" : 2,
-        "sec" : 30
+        "min" : 0,
+        "sec" : 10
     },
     "isSwap" : false,
     "key" : {
@@ -20,6 +20,11 @@
             "nup" : "right",
             "ndown" : "left"
         }
-
-    }
+    },
+    "resolution" : {
+        "width" : 800,
+        "height" : 450
+    },
+    "title" : "共ロボタイマー",
+    "font" : "Meiryo"
 }

@@ -1,6 +1,8 @@
 import tkinter as tk
-# import pyaudio
+import json
 # import winsound
+
+SETTING_FILE_PATH = "setting.json"
 
 DEFAULT_FONT = "Meiryo"
 
@@ -8,6 +10,37 @@ DEFAULT_HEIGHT = 450
 DEFAULT_WIDTH = 800
 
 TITLE = "共ロボタイマー"
+
+DEFAULT_SETTING = {
+    "leftTeam" : "左チーム",
+    "rightTeam" : "右チーム",
+    "score" : 5,
+    "time" : {
+        "min" : 2,
+        "sec" : 30
+    },
+    "isSwap" : False,
+    "key" : {
+        "left" : {
+            "up" : "w",
+            "down" : "s",
+            "nup" : "d",
+            "ndown" : "a"
+        },
+        "right" : {
+            "up" : "up",
+            "down" : "down",
+            "nup" : "right",
+            "ndown" : "left"
+        }
+    },
+    "resolution" : {
+        "width" : 800,
+        "height" : 450
+    },
+    "title" : "共ロボタイマー",
+    "font" : "Meiryo"
+}
 
 class KyoroboTimer: 
     # __point_font_size = 2.7
@@ -27,19 +60,36 @@ class KyoroboTimer:
     __left_team_name = "大分A"
     __right_team_name = "八代B"
 
-    def __init__(self, resolution, font, title):
-        self.__resolution = resolution
-        self.__font = font
-        self.__title = title
+    def __init__(self, setting_file_path):
+        try:
+            self.__setting = json.load(open(setting_file_path, "r", encoding="utf-8"))
+        except UnicodeDecodeError:
+            self.__setting = json.load(open(setting_file_path, "r", encoding="shift-jis"))
+        except FileNotFoundError:
+            print("setting.jsonが見つかりませんでした。")
+            self.__setting = DEFAULT_SETTING
+        except json.decoder.JSONDecodeError:
+            print("setting.jsonが壊れています。")
+            self.__setting = DEFAULT_SETTING
+        except Exception as e:
+            print("不明なエラーが発生しました。以下のエラーメッセージを開発者に送ってください。")
+            print(e)
+            self.__setting = DEFAULT_SETTING
+
+        self.__resolution = (self.__setting["resolution"]["width"], self.__setting["resolution"]["height"])
+        self.__font = self.__setting["font"]
+        self.__title = self.__setting["title"]
+
+        self.__min = self.__setting["time"]["min"]
+        self.__sec = self.__setting["time"]["sec"]
+        self.__time = self.__min * 60 + self.__sec
 
         self.root = tk.Tk()
         self.root.title(self.__title)
         self.root.geometry(f"{self.__resolution[0]}x{self.__resolution[1]}")
 
-        self.timer_screen = tk.Frame(self.root,
-                                    bg="#222222")
-        self.timer_screen.pack(fill=tk.BOTH,
-                            expand=True)
+        self.timer_screen = tk.Frame(self.root, bg="#222222")
+        self.timer_screen.pack(fill=tk.BOTH, expand=True)
 
         self.left_team_point = tk.Frame(self.timer_screen,
                                         bg="red")
@@ -85,6 +135,73 @@ class KyoroboTimer:
                                             font=self.__font,
                                             fg="white",
                                             bg=self.time_label.cget("bg"))
+        
+        self.left_team_point.grid(row=0, column=0,
+                            sticky=tk.NSEW)
+
+        self.right_team_point.grid(row=0, column=1,
+                            sticky=tk.NSEW)
+
+        self.left_team_name.grid(row=1, column=0,
+                            sticky=tk.NSEW)
+
+        self.right_team_name.grid(row=1, column=1,
+                            sticky=tk.NSEW)
+
+
+        self.time_label.grid(row=2, column=0,
+                    columnspan=2,
+                    sticky=tk.NSEW)
+        
+
+        self.left_team_point_label.place(relx=0.5, rely=0.5,
+                                         anchor=tk.CENTER)
+        
+        self.right_team_point_label.place(relx=0.5, rely=0.5,
+                                            anchor=tk.CENTER)
+        
+        self.left_team_name_label.place(relx=0.5, rely=0.5,
+                                            anchor=tk.CENTER)
+        
+        self.right_team_name_label.place(relx=0.5, rely=0.5,
+                                            anchor=tk.CENTER)
+        
+        self.time_label_label.place(relx=0.5, rely=0.5,
+                                        anchor=tk.CENTER)
+                                        
+
+        self.timer_screen.grid_columnconfigure(0, weight=1)
+        self.timer_screen.grid_columnconfigure(1, weight=1)
+
+        self.timer_screen.grid_rowconfigure(0, weight=4)
+        self.timer_screen.grid_rowconfigure(1, weight=1)
+        self.timer_screen.grid_rowconfigure(2, weight=5)
+
+    
+        self.countdown_screen = tk.Frame(self.root, bg="#000000")
+        self.countdown_screen.place(relx = 0, rely = 0, relwidth = 1, relheight = 1)      
+
+        self.countdown_label = tk.Label(self.countdown_screen,
+                                        text="5",
+                                        font=(self.__font, 0),
+                                        fg="white",
+                                        bg=self.countdown_screen.cget("bg"))
+        self.countdown_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+    def start_countdown(self):
+        now = int(self.countdown_label.cget("text"))
+        if(now > 1):
+            self.countdown_label.config(text=str(now - 1))
+            self.root.after(1000, self.start_countdown)
+        else:
+            def end_fucntion():
+                self.timer_screen.tkraise()
+                self.countdown_screen.place_forget()
+                self.count_down()
+            self.countdown_label.place_forget()
+            self.countdown_label.config(text="Start!")
+            self.countdown_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+            self.root.after(1000, end_fucntion)
 
     def count_down(self):
         if(self.__time > 0):
@@ -111,16 +228,21 @@ class KyoroboTimer:
         def update_size(): #FONT ANTIALIASING
             print(f"resize {self.root.winfo_width()}x{self.root.winfo_height()}")
 
-            self.left_team_point_label.config(
-                    font=(self.__font, int(self.root.winfo_height() / self.__point_font_size)))
-            self.right_team_point_label.config(
-                    font=(self.__font, int(self.root.winfo_height() / self.__point_font_size)))
-            self.left_team_name_label.config(
-                    font=(self.__font, int(self.root.winfo_height() / self.__time_font_size)))
-            self.right_team_name_label.config(
-                    font=(self.__font, int(self.root.winfo_height() / self.__time_font_size)))
-            self.time_label_label.config(
-                    font=(self.__font, int(self.root.winfo_height() / self.__name_font_size)))
+            if(self.timer_screen.winfo_ismapped()):
+                self.left_team_point_label.config(
+                        font=(self.__font, int(self.root.winfo_height() / self.__point_font_size)))
+                self.right_team_point_label.config(
+                        font=(self.__font, int(self.root.winfo_height() / self.__point_font_size)))
+                self.left_team_name_label.config(
+                        font=(self.__font, int(self.root.winfo_height() / self.__time_font_size)))
+                self.right_team_name_label.config(
+                        font=(self.__font, int(self.root.winfo_height() / self.__time_font_size)))
+                self.time_label_label.config(
+                        font=(self.__font, int(self.root.winfo_height() / self.__name_font_size)))
+                
+            if(self.countdown_screen.winfo_ismapped()):
+                self.countdown_label.config(
+                        font=(self.__font, int(self.root.winfo_height() / 2.35)))
             
 
         self.root.after_idle(update_size)
@@ -168,57 +290,14 @@ class KyoroboTimer:
                 self.right_team_point_label.config(text=str(int(self.right_team_point_label.cget("text")) - self.__point))
 
     def run(self):
-
-
-        self.left_team_point.grid(row=0, column=0,
-                            sticky=tk.NSEW)
-
-        self.right_team_point.grid(row=0, column=1,
-                            sticky=tk.NSEW)
-
-        self.left_team_name.grid(row=1, column=0,
-                            sticky=tk.NSEW)
-
-        self.right_team_name.grid(row=1, column=1,
-                            sticky=tk.NSEW)
-
-
-        self.time_label.grid(row=2, column=0,
-                    columnspan=2,
-                    sticky=tk.NSEW)
-        
-
-        self.left_team_point_label.place(relx=0.5, rely=0.5,
-                                         anchor=tk.CENTER)
-        
-        self.right_team_point_label.place(relx=0.5, rely=0.5,
-                                            anchor=tk.CENTER)
-        
-        self.left_team_name_label.place(relx=0.5, rely=0.5,
-                                            anchor=tk.CENTER)
-        
-        self.right_team_name_label.place(relx=0.5, rely=0.5,
-                                            anchor=tk.CENTER)
-        
-        self.time_label_label.place(relx=0.5, rely=0.5,
-                                        anchor=tk.CENTER)
-                                        
-
-        self.timer_screen.grid_columnconfigure(0, weight=1)
-        self.timer_screen.grid_columnconfigure(1, weight=1)
-
-        self.timer_screen.grid_rowconfigure(0, weight=4)
-        self.timer_screen.grid_rowconfigure(1, weight=1)
-        self.timer_screen.grid_rowconfigure(2, weight=5)
-
         self.root.bind("<KeyPress>", self.key_event)
 
         self.root.bind("<Configure>", self.on_resize)
 
-        self.root.after(1000, self.count_down)
+        self.root.after(1000, self.start_countdown)
 
         self.root.mainloop()
 
 if __name__ == "__main__":
-    timer = KyoroboTimer((DEFAULT_WIDTH, DEFAULT_HEIGHT), DEFAULT_FONT, TITLE)
+    timer = KyoroboTimer(SETTING_FILE_PATH)
     timer.run()
