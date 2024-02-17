@@ -3,8 +3,7 @@ from cx_Freeze import setup, Executable
 
 build_exe_options = {
     "packages":[
-        "tkinter",
-        "winsound"
+        "pygame"
     ],
     "include_files":[
         "setting.json",

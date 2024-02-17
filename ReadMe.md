@@ -34,4 +34,5 @@ escキーで最初の画面に戻る
 ## 更新情報
 
 
-cxfreeze
+<!-- cxfreeze -->
+<!-- https://www.keshikan.net/fonts.html -->
