@@ -1,3 +1,10 @@
+---
+html:
+  embed_local_images: true
+  embed_svg: true
+  offline: true
+  toc: true
+---
 # 概要
 
 # 使い方
