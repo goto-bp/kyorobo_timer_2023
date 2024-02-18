@@ -3,11 +3,17 @@ from cx_Freeze import setup, Executable
 
 build_exe_options = {
     "packages":[
-        "pygame"
+        "pygame",
+        "json",
+        "sys"
     ],
     "include_files":[
         "setting.json",
-        "sounds/"
+        "sounds/",
+        "img/",
+        "font/",
+        "Readme.md",
+        "ReadMe.pdf"
     ]
 }
 

@@ -53,6 +53,8 @@ class KyoroboTimer:
     __Green = (0, 255, 0)
     __Blue = (0, 0, 255)
 
+    __swap = False
+
     # 初期化処理
     def __init__(self, setting_file_path):
         pygame.init()
@@ -96,6 +98,8 @@ class KyoroboTimer:
 
         self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
         self.__time = self.__setting["time"]
+        self.__leftTeam["name"] = self.__setting["leftTeam"]
+        self.__rightTeam["name"] = self.__setting["rightTeam"]
 
         self.__leftKeys = {
             "up" : pygame.key.key_code(self.__setting["key"]["left"]["up"]),
@@ -109,6 +113,7 @@ class KyoroboTimer:
             "nup" : pygame.key.key_code(self.__setting["key"]["right"]["nup"]),
             "ndown" : pygame.key.key_code(self.__setting["key"]["right"]["ndown"])
         }
+        self.__swapKey = pygame.key.key_code(self.__setting["key"]["swap"])
 
 
         pygame.display.set_caption("共ロボタイマー")
@@ -119,16 +124,46 @@ class KyoroboTimer:
 
     # メインループ
     def run(self):
-        pygame.time.set_timer(USEREVENT, 1000)
+        nowFunction = self.title
+        
         while True:
-            self.timer()
+            code = nowFunction()
+
+            if code == "exit":
+                nowFunction = self.title
+            elif code == "timer":
+                nowFunction = self.timer
+            elif code == "countdown":
+                pygame.time.set_timer(USEREVENT, 1000)
+                self.__count = 5
+                nowFunction = self.countdown
+
             pygame.time.wait(30)
 
             pygame.display.update()
 
     # タイトル画面
     def title(self):
-        pass
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                sys.exit()
+
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    sys.exit()
+                if event.key == K_RETURN:
+                    return "countdown"
+
+        windowsize = pygame.display.get_surface().get_size()
+        # 背景の描画
+        pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowsize[0], windowsize[1]))
+
+        font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 4))
+        text = font.render("共同ロボコン", True, (255, 255, 255))
+        self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1] / 2 - text.get_height() / 2))
+        
+                
+        return ""
 
     # 設定画面
     def setting(self):
@@ -136,7 +171,42 @@ class KyoroboTimer:
 
     # カウントダウン画面
     def countdown(self):
-        pass
+
+        for event in pygame.event.get():
+            if event.type == USEREVENT:
+                self.__count -= 1
+                if self.__count == -1:
+                    self.__time["sec"] -= 1
+                    return "timer"
+                elif self.__count == 0:
+                    self.__beepHi.play()
+                elif self.__count <= 3:
+                    self.__beepLo.play()
+            if event.type == QUIT:
+                sys.exit()
+
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.time.set_timer(USEREVENT, 0)
+                    return "exit"
+                
+            windowsize = pygame.display.get_surface().get_size()
+
+            # 背景の描画
+            pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowsize[0], windowsize[1]))
+
+            # カウントダウンの描画
+            
+            if self.__count == 0:
+                font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 4))
+                text = font.render("START", True, (255, 255, 255))
+            else:
+                font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 1 - windowsize[1] / 10))
+                text = font.render(str(self.__count), True, (255, 255, 255))
+            self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1] / 2 - text.get_height() / 2))
+
+            
+        return ""
 
     # タイマー画面
     def timer(self):
@@ -146,8 +216,6 @@ class KyoroboTimer:
                 time -= 1
                 self.__time["min"] = time // 60
                 self.__time["sec"] = time % 60
-                print(time)
-                print(self.__time["min"], self.__time["sec"])
 
                 if time == 0:
                     self.__beepHi.play()
@@ -160,8 +228,8 @@ class KyoroboTimer:
 
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    sys.exit()
                     pygame.time.set_timer(USEREVENT, 0)
+                    return "exit"
 
 
                 if event.key == K_F11:
@@ -188,6 +256,10 @@ class KyoroboTimer:
                 if event.key == self.__rightKeys["ndown"]:
                     self.__rightTeam["score"] -= self.__setting["score"]
 
+                if event.key == self.__swapKey:
+                    self.__swap = not self.__swap
+                    self.__leftTeam, self.__rightTeam = self.__rightTeam, self.__leftTeam
+
         if(self.__leftTeam["score"] < 0):
             self.__leftTeam["score"] = 0
         if(self.__rightTeam["score"] < 0):
@@ -198,8 +270,12 @@ class KyoroboTimer:
         # 背景の描画
         pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowSise[0], windowSise[1]))
 
-        leftColor = self.__Red
-        rightColor = self.__Blue
+        if self.__swap:
+            leftColor = self.__Red
+            rightColor = self.__Blue
+        else:
+            leftColor = self.__Blue
+            rightColor = self.__Red
 
         pygame.draw.rect(self.screen, leftColor, Rect(0, 0, windowSise[0] / 2, windowSise[1] * 4 / 10))
         pygame.draw.rect(self.screen, rightColor, Rect(windowSise[0] / 2, 0, windowSise[0] / 2, windowSise[1] * 4 / 10))
@@ -227,11 +303,12 @@ class KyoroboTimer:
         # チーム名の描画
         font = pygame.font.SysFont(self.__setting["font"], int(windowSise[1] / 10 - (windowSise[1] / 10) / 4))
 
-        leftTeamName = font.render(self.__setting["leftTeam"], True, (255, 255, 255))
-        rightTeamName = font.render(self.__setting["rightTeam"], True, (255, 255, 255))
+        leftTeamName = font.render(self.__leftTeam["name"], True, (255, 255, 255))
+        rightTeamName = font.render(self.__rightTeam["name"], True, (255, 255, 255))
         self.screen.blit(leftTeamName, (windowSise[0] / 4 - leftTeamName.get_width() / 2, windowSise[1] * 9 / 20 - leftTeamName.get_height() / 2))
         self.screen.blit(rightTeamName, (windowSise[0] * 3 / 4 - rightTeamName.get_width() / 2, windowSise[1] * 9 / 20 - rightTeamName.get_height() / 2))
 
+        return ""
 
 # メイン関数
 if __name__ == "__main__":
