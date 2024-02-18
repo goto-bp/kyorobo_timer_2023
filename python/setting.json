@@ -1,10 +1,10 @@
 {
-    "leftTeam" : "大分高専Aチーム",
-    "rightTeam" : "八代高専Aチーム",
+    "leftTeam" : "明野高専Bチーム",
+    "rightTeam" : "鶴見高専Aチーム",
     "score" : 5,
     "time" : {
-        "min" : 0,
-        "sec" : 10
+        "min" : 2,
+        "sec" : 30
     },
     "isSwap" : false,
     "key" : {

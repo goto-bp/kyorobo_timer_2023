@@ -1,7 +1,9 @@
-*.png
-*.pdf
-build/
-dist/
+/*.png
+/*.pdf
+/*.txt
+python/build/
+python/dist/
+python/img/*.dio
 main.spec
-*.txt
-__pycache__/
+python/__pycache__/
+!ReadMe.pdf
