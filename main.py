@@ -769,7 +769,5 @@ class KyoroboTimer:
 # メイン関数
 if __name__ == "__main__":
     kyorobo_timer = KyoroboTimer(SETTING_FILE_PATH)
-    kyorobo_timer.beepHi = pygame.mixer.Sound("sounds/beepHi.wav")
-    kyorobo_timer.beepLo = pygame.mixer.Sound("sounds/beepLo.wav")
     kyorobo_timer.run()
     del kyorobo_timer
