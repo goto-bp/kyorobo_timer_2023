@@ -1,10 +1,10 @@
 {
     "leftTeam": "Aチーム",
-    "rightTeam": "熊本高専熊本キャンパスBチーム",
+    "rightTeam": "Bチーム",
     "score": 5,
     "time": {
-        "min": 0,
-        "sec": 15
+        "min": 2,
+        "sec": 30
     },
     "timerReverse": false,
     "isSwap": false,
