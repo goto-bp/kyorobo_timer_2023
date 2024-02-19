@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import json
 import sys
+import random
 
 # 設定ファイルのパス
 SETTING_FILE_PATH = "setting.json"
@@ -15,6 +16,7 @@ DEFAULT_SETTING = {
         "min" : 2,
         "sec" : 30
     },
+    "timerReverse": False,
     "isSwap" : False,
     "key" : {
         "left" : {
@@ -47,6 +49,7 @@ class KyoroboTimer:
     __rightTeam = { "name" : "", "score" : 0 }
     __time = { "min" : 0, "sec" : 10 }
     __settingTime = { "min" : 0, "sec" : 0 }
+    __setTime = { "min" : 0, "sec" : 0 }
 
     __icon = None
 
@@ -61,6 +64,36 @@ class KyoroboTimer:
     __settingFilePath = ""
 
     __loadFlag = 0
+
+    # x,y,方向,色,速度,半径
+    __circleList = [[None,None,False,(147, 247, 255),None,None],
+                    [None,None,False,(147, 247, 255),None,None],
+                    [None,None,False,(147, 247, 255),None,None],
+                    [None,None,False,(147, 247, 255),None,None],
+                    [None,None,False,(147, 247, 255),None,None],
+                    [None,None,False,(147, 247, 255),None,None],
+                    [None,None,False,(255, 249, 132),None,None],
+                    [None,None,False,(255, 249, 132),None,None],
+                    [None,None,False,(255, 249, 132),None,None],
+                    [None,None,False,(255, 249, 132),None,None],
+                    [None,None,False,(255, 249, 132),None,None],
+                    [None,None,False,(255, 249, 132),None,None],
+                    [None,None,False,(187, 180, 250),None,None],
+                    [None,None,False,(187, 180, 250),None,None],
+                    [None,None,False,(187, 180, 250),None,None],
+                    [None,None,False,(187, 180, 250),None,None],
+                    [None,None,False,(187, 180, 250),None,None],
+                    [None,None,False,(187, 180, 250),None,None],
+                    [None,None,False,(200, 255, 200),None,None],
+                    [None,None,False,(200, 255, 200),None,None],
+                    [None,None,False,(200, 255, 200),None,None],
+                    [None,None,False,(200, 255, 200),None,None],
+                    [None,None,False,(200, 255, 200),None,None],
+                    [None,None,False,(200, 255, 200),None,None]]
+                        
+
+    beepHi = None
+    beepLo = None
 
     # 設定ファイルの読み込み
     def loadSetting(self):
@@ -77,7 +110,8 @@ class KyoroboTimer:
             print("不明なエラーが発生しました。以下のエラーメッセージを開発者に送ってください。")
             print(e)
 
-        self.__time = self.__setting["time"]
+        self.__time["min"] = self.__setting["time"]["min"]
+        self.__time["sec"] = self.__setting["time"]["sec"]
         self.__leftTeam["name"] = self.__setting["leftTeam"]
         self.__rightTeam["name"] = self.__setting["rightTeam"]
 
@@ -132,17 +166,19 @@ class KyoroboTimer:
 
         # 効果音の読み込み
         try:
-            self.__beepLo = pygame.mixer.Sound("sounds/beepLo.wav")
-            self.__beepHi = pygame.mixer.Sound("sounds/beepHi.wav")
+            self.beepLo = pygame.mixer.Sound("sounds/beepLo.wav")
+            self.beepHi = pygame.mixer.Sound("sounds/beepHi.wav")
         except Exception as e:
             print("効果音の読み込みに失敗しました。")
             print(e)
 
+        try:
+            self.__logo = pygame.image.load("img/logo.png")
+        except Exception as e:
+            print("ロゴの読み込みに失敗しました。")
+            print(e)
+
         self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-
-
-
-
 
         pygame.display.set_caption("共ロボタイマー")
         
@@ -159,12 +195,18 @@ class KyoroboTimer:
 
             if code == "exit":
                 nowFunction = self.title
+                self.__time["min"] = self.__setting["time"]["min"]
+                self.__time["sec"] = self.__setting["time"]["sec"]
+                self.__leftTeam["score"] = 0
+                self.__rightTeam["score"] = 0
             elif code == "timer":
                 nowFunction = self.timer
             elif code == "countdown":
+                nowFunction = self.countdown
+                self.__setTime["min"] = self.__time["min"]
+                self.__setTime["sec"] = self.__time["sec"]
                 pygame.time.set_timer(USEREVENT, 1000)
                 self.__count = 5
-                nowFunction = self.countdown
             elif code == "setting":
                 nowFunction = self.setting
                 self.__cursor["y"] = 0
@@ -172,6 +214,7 @@ class KyoroboTimer:
                 nowFunction = self.preview
             elif code == "timerSetting":
                 nowFunction = self.timerSetting
+                self.__tmpTimeReverse = self.__setting["timerReverse"]
                 self.__settingTime["min"] = self.__time["min"]
                 self.__settingTime["sec"] = self.__time["sec"]
                 self.__cursor["y"] = 0
@@ -203,12 +246,40 @@ class KyoroboTimer:
                 
 
         windowsize = pygame.display.get_surface().get_size()
+
         # 背景の描画
         pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowsize[0], windowsize[1]))
 
-        font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 5))
-        text = font.render("共同ロボコン2024", True, self.__Green)
-        self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1] / 2 - text.get_height() / 2))
+        for i in range(len(self.__circleList)):
+            if self.__circleList[i][0] == None:
+                if random.random() < 0.005:
+                    x = random.random()
+                    radius = random.uniform(0.5, 1)
+                    speed = random.uniform(0.005 / 4, 0.015 / 4)
+                    if random.random() < 0.5:
+                        self.__circleList[i] = (x, 0 - radius / 5, True, self.__circleList[i][3], speed, radius)
+                    else:
+                        self.__circleList[i] = (x, 1 + radius / 5, False, self.__circleList[i][3], speed, radius)
+                else:
+                    continue
+            else:
+                if self.__circleList[i][2]:
+                    self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] + self.__circleList[i][4], True, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
+                else:
+                    self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] - self.__circleList[i][4], False, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
+
+                if self.__circleList[i][1] < 0 - self.__circleList[i][5] / 5 or self.__circleList[i][1] > 1 + self.__circleList[i][5] / 5:
+                    self.__circleList[i] = (None, None, False, self.__circleList[i][3], None, None)
+                else:
+                    pygame.draw.circle(self.screen, self.__circleList[i][3], (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
+            
+
+
+        logoScale = (windowsize[1] / 3) / self.__logo.get_height()
+
+        showLogo = pygame.transform.scale(self.__logo, (int(self.__logo.get_width() * logoScale), int(self.__logo.get_height() * logoScale)))
+
+        self.screen.blit(showLogo, (windowsize[0] / 2 - showLogo.get_width() / 2, windowsize[1] / 2 - showLogo.get_height() / 2))
         
                 
         return ""
@@ -244,7 +315,7 @@ class KyoroboTimer:
                     elif self.__cursor["y"] == 1:
                         return "timerSetting"
                     else:
-                        self.__beepLo.play()
+                        self.beepLo.play()
         
 
         if self.__cursor["y"] < 0:
@@ -286,9 +357,9 @@ class KyoroboTimer:
                     self.__time["sec"] -= 1
                     return "timer"
                 elif self.__count == 0:
-                    self.__beepHi.play()
+                    self.beepHi.play()
                 elif self.__count <= 3:
-                    self.__beepLo.play()
+                    self.beepLo.play()
             if event.type == QUIT:
                 sys.exit()
 
@@ -310,8 +381,8 @@ class KyoroboTimer:
             # カウントダウンの描画
             
             if self.__count == 0:
-                font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 4))
-                text = font.render("START", True, (255, 255, 255))
+                font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 3))
+                text = font.render("START!", True, (255, 255, 255))
             else:
                 font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 1 - windowsize[1] / 10))
                 text = font.render(str(self.__count), True, (255, 255, 255))
@@ -330,10 +401,10 @@ class KyoroboTimer:
                 self.__time["sec"] = time % 60
 
                 if time == 0:
-                    self.__beepHi.play()
+                    self.beepHi.play()
                     pygame.time.set_timer(USEREVENT, 0)
                 elif time <= 3:
-                    self.__beepLo.play()
+                    self.beepLo.play()
 
             if event.type == QUIT:
                 sys.exit()
@@ -341,9 +412,6 @@ class KyoroboTimer:
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.time.set_timer(USEREVENT, 0)
-                    self.__time = self.__setting["time"]
-                    self.__leftTeam["score"] = 0
-                    self.__rightTeam["score"] = 0
                     return "exit"
 
 
@@ -401,11 +469,18 @@ class KyoroboTimer:
         pygame.draw.rect(self.screen, (20, 20, 20), Rect(0, windowSise[1] * 4 / 10, windowSise[0], windowSise[1] / 10))
 
         # タイマーの描画
-        time = str(self.__time["min"]).zfill(2) + ":" + str(self.__time["sec"]).zfill(2)
+        if not self.__setting["timerReverse"]:
+            now = self.__time["min"] * 60 + self.__time["sec"]
+            first = self.__setTime["min"] * 60 + self.__setTime["sec"]
+            min = int((first - now) / 60)
+            sec = int((first - now) % 60)
+            time = str(min).zfill(2) + ":" + str(sec).zfill(2)
+        else:
+            time = str(self.__time["min"]).zfill(2) + ":" + str(self.__time["sec"]).zfill(2)
         # timerFont = pygame.font.Font(object(self.__timerFontObject), int(windowSise[1] / 2 - windowSise[1] / 10))
         timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(windowSise[1] / 2 - windowSise[1] / 10))
 
-        if time == "00:00":
+        if self.__time["min"] == 0 and self.__time["sec"] == 0:
             timerText = timerFont.render(time, True, self.__Red)
         else:
             timerText = timerFont.render(time, True, (255, 255, 255))
@@ -424,6 +499,12 @@ class KyoroboTimer:
 
         leftTeamName = font.render(self.__leftTeam["name"], True, (255, 255, 255))
         rightTeamName = font.render(self.__rightTeam["name"], True, (255, 255, 255))
+
+        if leftTeamName.get_width() > windowSise[0] / 2:
+            leftTeamName = pygame.transform.scale(leftTeamName, (int(windowSise[0] / 2), int(leftTeamName.get_height() * (windowSise[0] / 2) / leftTeamName.get_width())))
+        if rightTeamName.get_width() > windowSise[0] / 2:
+            rightTeamName = pygame.transform.scale(rightTeamName, (int(windowSise[0] / 2), int(rightTeamName.get_height() * (windowSise[0] / 2) / rightTeamName.get_width())))
+
         self.screen.blit(leftTeamName, (windowSise[0] / 4 - leftTeamName.get_width() / 2, windowSise[1] * 9 / 20 - leftTeamName.get_height() / 2))
         self.screen.blit(rightTeamName, (windowSise[0] * 3 / 4 - rightTeamName.get_width() / 2, windowSise[1] * 9 / 20 - rightTeamName.get_height() / 2))
 
@@ -437,7 +518,8 @@ class KyoroboTimer:
 
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    self.__time = self.__setting["time"]
+                    self.__time["min"] = self.__setting["time"]["min"]
+                    self.__time["sec"] = self.__setting["time"]["sec"]
                     self.__leftTeam["score"] = 0
                     self.__rightTeam["score"] = 0
                     return "setting"
@@ -566,24 +648,29 @@ class KyoroboTimer:
                     if self.__cursor["x"] == 2:
                         self.__cursor["x"] += 1
                 if event.key == K_RETURN:
-                    if self.__cursor["x"] == 5:
+                    if self.__cursor["x"] == 6:
                         self.__time = self.__settingTime
-                        self.__setting["time"] = self.__time
+                        self.__setting["time"]["min"] = self.__time["min"]
+                        self.__setting["time"]["sec"] = self.__time["sec"]
+                        self.__setting["timerReverse"] = self.__tmpTimeReverse
                         self.saveSetting()
                         return "setting"
+                    if self.__cursor["x"] == 5:
+                        self.__tmpTimeReverse = not self.__tmpTimeReverse
         
         if self.__settingTime["min"] < 0:
+            self.__settingTime["min"] = 99
+        if self.__settingTime["min"] > 99:
             self.__settingTime["min"] = 0
         if self.__settingTime["sec"] < 0:
-            self.__settingTime["sec"] = 0
-        if self.__settingTime["sec"] > 59:
             self.__settingTime["sec"] = 59
-        if self.__settingTime["min"] > 99:
-            self.__settingTime["min"] = 99
+        if self.__settingTime["sec"] > 59:
+            self.__settingTime["sec"] = 0
+        
                 
         if self.__cursor["x"] < 0:
-            self.__cursor["x"] = 5
-        if self.__cursor["x"] > 5:
+            self.__cursor["x"] = 6
+        if self.__cursor["x"] > 6:
             self.__cursor["x"] = 0
 
         windowSize = pygame.display.get_surface().get_size()
@@ -603,11 +690,23 @@ class KyoroboTimer:
             self.screen.blit(text, (windowSize[0] * (i + 2) / 8 - text.get_width() / 2, windowSize[1] / 2 - text.get_height() / 2))
         
         font = pygame.font.SysFont(self.__setting["font"], int(windowSize[1] / 10))
-        if self.__cursor["x"] == 5:
+        if self.__cursor["x"] == 6:
             text = font.render("保存", True, (255, 0, 0))
         else:
             text = font.render("保存", True, (0, 0, 0))
-        self.screen.blit(text, (windowSize[0] / 2 - text.get_width() / 2, windowSize[1] * 3 / 4 - text.get_height() / 2))
+        self.screen.blit(text, (windowSize[0] * 3 / 4 - text.get_width() / 2, windowSize[1] * 3 / 4 - text.get_height() / 2))
+
+        reverseText = ""
+        if self.__tmpTimeReverse:
+            reverseText = "カウントダウン"
+        else:
+            reverseText = "カウントアップ"
+
+        if self.__cursor["x"] == 5:
+            text = font.render(reverseText, True, (255, 0, 0))
+        else:
+            text = font.render(reverseText, True, (0, 0, 0))
+        self.screen.blit(text, (windowSize[0] * 1 / 4 - text.get_width() / 2, windowSize[1] * 3 / 4 - text.get_height() / 2))
 
         return ""
                 

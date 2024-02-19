@@ -1,6 +1,8 @@
 import sys
 from cx_Freeze import setup, Executable
 
+sys.setrecursionlimit(67108864)
+
 build_exe_options = {
     "packages":[
         "pygame",
@@ -13,7 +15,8 @@ build_exe_options = {
         "img/",
         "font/",
         "Readme.md",
-        "ReadMe.pdf"
+        "ReadMe.pdf",
+        "ReadMe.html"
     ]
 }
 
@@ -23,8 +26,10 @@ if sys.platform == "win32":
 
 setup(
     name="KyoroboTimer",
-    version="0.5",
+    version="0.8",
     description="Timer App",
     options={"build_exe": build_exe_options},
     executables=[Executable("main.py", base=base)]
     )
+
+# python setup.py bdist_msi

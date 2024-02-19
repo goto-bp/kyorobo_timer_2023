@@ -1,11 +1,12 @@
 {
-    "leftTeam": "明野高専Bチーム",
-    "rightTeam": "鶴見高専Aチーム",
+    "leftTeam": "Aチーム",
+    "rightTeam": "熊本高専熊本キャンパスBチーム",
     "score": 5,
     "time": {
-        "min": 2,
-        "sec": 30
+        "min": 0,
+        "sec": 15
     },
+    "timerReverse": false,
     "isSwap": false,
     "key": {
         "left": {
