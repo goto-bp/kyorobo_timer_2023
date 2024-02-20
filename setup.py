@@ -26,7 +26,7 @@ if sys.platform == "win32":
 
 setup(
     name="KyoroboTimer",
-    version="0.8",
+    version="0.81",
     description="Timer App",
     options={"build_exe": build_exe_options},
     executables=[Executable("main.py", base=base)]

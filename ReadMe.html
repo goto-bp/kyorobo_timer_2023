@@ -31,7 +31,11 @@
 escキーで一つ前の画面に戻る</p>
 <h2 id="タイトル画面">タイトル画面 </h2>
 <p>エンターキーで開始<br>
-shiftキーで設定画面を表示する</p>
+スペースキーを押すことでREADYを省略して開始<br>
+shiftキーで設定画面を表示する<br>
+F5キーで設定ファイルの再読み込みを行うことができる<br>
+1でタイマーの時間を2分30秒に変更<br>
+2でタイマーの時間を5分0秒に変更</p>
 <h2 id="設定画面">設定画面 </h2>
 <p>上下で設定項目の変更</p>
 <h3 id="チーム名">チーム名 </h3>
@@ -55,9 +59,8 @@ escキーで戻ると設定が保存されない</p>
 <h3 id="音量設定">音量設定 </h3>
 <p>※準備中<br>
 効果音しかならないのでwindows標準の設定とかで調整しておいてください<br>
-システム<br>
-サウンド<br>
-アプリの音量とデバイスの設定</p>
+設定→システム→サウンド→アプリの音量とデバイスの設定<br>
+から変更できます</p>
 <h3 id="設定ファイルの再読み込み">設定ファイルの再読み込み </h3>
 <p>設定ファイルを読み込みなおす</p>
 <h3 id="プレビュー">プレビュー </h3>
@@ -88,10 +91,10 @@ escキー</li>
 <h2 id="settingjson">setting.json </h2>
 <p>設定情報が入ったファイル．ここを直接編集することで設定を変更することもできる．タイマーを起動中に変更した時は設定画面から「設定ファイルの再読み込み」を選択することで設定を反映させることができる．</p>
 <ul>
-<li>leftTeam<br>
-左側のチーム名を入れる</li>
-<li>rightTeam<br>
-右側のチーム名を入れる</li>
+<li>blueTeam<br>
+青側のチーム名を入れる</li>
+<li>redTeam<br>
+赤側のチーム名を入れる</li>
 <li>score<br>
 nup,ndownキーで一度に下げる点数を入れる<br>
 ex:5を入れると一度に5点上下できる</li>
@@ -107,7 +110,9 @@ ex:5を入れると一度に5点上下できる</li>
 <li>timerReverse<br>
 カウントアップかカウントダウンかを変える．falseで「カウントアップ」trueで「カウントアップ」</li>
 <li>isSwap<br>
-左右入れ替え(今は動作しない)</li>
+左右入れ替え<br>
+falseで左が青，右が赤<br>
+trueで左が赤，右が青</li>
 <li>key<br>
 タイマー画面でのキーの設定<br>
 "left": {// 左の操作<br>
@@ -133,15 +138,111 @@ ex:5を入れると一度に5点上下できる</li>
 使用するフォント</li>
 </ul>
 <h1 id="更新情報">更新情報 </h1>
+<ul>
+<li>ver0.81<br>
+jsonファイルのleftTeam,rightTeamをblueTeam,redTeamに変更<br>
+タイトル画面での設定変更を可能に</li>
+</ul>
 
       </div>
+      <div class="md-sidebar-toc">
+<div class="md-toc">
+<div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:18px">
+          <a href="#概要" class="md-toc-link">
+            <p>概要</p>
+
+          </a></div><details style="padding:0;;padding-left:0px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#使い方" class="md-toc-link"><p>使い方</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#共通" class="md-toc-link">
+            <p>共通</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#タイトル画面" class="md-toc-link">
+            <p>タイトル画面</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#設定画面" class="md-toc-link"><p>設定画面</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#チーム名" class="md-toc-link">
+            <p>チーム名</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#タイマーの設定" class="md-toc-link">
+            <p>タイマーの設定</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#一度に増やす点数決め" class="md-toc-link">
+            <p>一度に増やす点数決め</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#左右入れ替え" class="md-toc-link">
+            <p>左右入れ替え</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#キーコンフィグ" class="md-toc-link">
+            <p>キーコンフィグ</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#音量設定" class="md-toc-link">
+            <p>音量設定</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#設定ファイルの再読み込み" class="md-toc-link">
+            <p>設定ファイルの再読み込み</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#プレビュー" class="md-toc-link">
+            <p>プレビュー</p>
+
+          </a></div>
+        </div>
+      </details>
+    <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#タイマー画面" class="md-toc-link">
+            <p>タイマー画面</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#settingjson" class="md-toc-link">
+            <p>setting.json</p>
+
+          </a></div>
+        </div>
+      </details>
+    <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:18px">
+          <a href="#更新情報" class="md-toc-link">
+            <p>更新情報</p>
+
+          </a></div>
+</div>
+</div>
+      <a id="sidebar-toc-btn">≡</a>
+    
+    
+    
+    
+    
+    
+<script>
+document.body.setAttribute('html-show-sidebar-toc', true)
+var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
+sidebarTOCBtn.addEventListener('click', function(event) {
+  event.stopPropagation()
+  if (document.body.hasAttribute('html-show-sidebar-toc')) {
+    document.body.removeAttribute('html-show-sidebar-toc')
+  } else {
+    document.body.setAttribute('html-show-sidebar-toc', true)
+  }
+})
+</script>
       
-      
-    
-    
-    
-    
-    
-    
   
     </body></html>

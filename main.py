@@ -57,6 +57,8 @@ class KyoroboTimer:
     __Green = (0, 255, 0)
     __Blue = (0, 0, 255)
 
+    __changeColor = 1
+
     __swap = False
 
     __cursor = {"x" : 0, "y" : 0}
@@ -110,10 +112,16 @@ class KyoroboTimer:
             print("不明なエラーが発生しました。以下のエラーメッセージを開発者に送ってください。")
             print(e)
 
+        self.__swap = self.__setting["isSwap"]
+
         self.__time["min"] = self.__setting["time"]["min"]
         self.__time["sec"] = self.__setting["time"]["sec"]
-        self.__leftTeam["name"] = self.__setting["leftTeam"]
-        self.__rightTeam["name"] = self.__setting["rightTeam"]
+        if self.__swap:
+            self.__leftTeam["name"] = self.__setting["redTeam"]
+            self.__rightTeam["name"] = self.__setting["blueTeam"]
+        else:
+            self.__leftTeam["name"] = self.__setting["blueTeam"]
+            self.__rightTeam["name"] = self.__setting["redTeam"]
 
         self.__leftKeys = {
             "up" : pygame.key.key_code(self.__setting["key"]["left"]["up"]),
@@ -219,6 +227,8 @@ class KyoroboTimer:
                 self.__settingTime["sec"] = self.__time["sec"]
                 self.__cursor["y"] = 0
                 self.__cursor["x"] = 0
+            elif code == "ready":
+                nowFunction = self.ready
 
             pygame.time.wait(30)
 
@@ -238,7 +248,26 @@ class KyoroboTimer:
                         self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
                     else:
                         self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+                if event.key == K_F5:
+                    self.loadSetting()
+                    self.__changeColor = 2
+                if event.key == K_1:
+                    self.__setting["time"]["min"] = 2
+                    self.__setting["time"]["sec"] = 30
+                    self.__time["min"] = 2
+                    self.__time["sec"] = 30
+                    self.saveSetting()
+                    self.__changeColor = 2
+                if event.key == K_2:
+                    self.__setting["time"]["min"] = 5
+                    self.__setting["time"]["sec"] = 0
+                    self.__time["min"] = 5
+                    self.__time["sec"] = 0
+                    self.saveSetting()
+                    self.__changeColor = 2
                 if event.key == K_RETURN:
+                    return "ready"
+                if event.key == K_SPACE:
                     return "countdown"
                 if event.key == K_LSHIFT or event.key == K_RSHIFT:
                     return "setting"
@@ -271,11 +300,17 @@ class KyoroboTimer:
                 if self.__circleList[i][1] < 0 - self.__circleList[i][5] / 5 or self.__circleList[i][1] > 1 + self.__circleList[i][5] / 5:
                     self.__circleList[i] = (None, None, False, self.__circleList[i][3], None, None)
                 else:
-                    pygame.draw.circle(self.screen, self.__circleList[i][3], (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
-            
+                    fixColor = (255 if self.__circleList[i][3][0] * self.__changeColor > 255 else self.__circleList[i][3][0] * self.__changeColor,
+                                255 if self.__circleList[i][3][1] * self.__changeColor > 255 else self.__circleList[i][3][1] * self.__changeColor,
+                                255 if self.__circleList[i][3][2] * self.__changeColor > 255 else self.__circleList[i][3][2] * self.__changeColor)
+                    
 
+                    pygame.draw.circle(self.screen, fixColor, (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
 
-        logoScale = (windowsize[1] / 3) / self.__logo.get_height()
+        if self.__changeColor > 1:
+            self.__changeColor -= 0.1
+
+        logoScale = (windowsize[1] / 4) / self.__logo.get_height()
 
         showLogo = pygame.transform.scale(self.__logo, (int(self.__logo.get_width() * logoScale), int(self.__logo.get_height() * logoScale)))
 
@@ -347,6 +382,31 @@ class KyoroboTimer:
 
         return ""
 
+    def ready(self):
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    if self.screen.get_flags() & pygame.FULLSCREEN:
+                        self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
+                    else:
+                        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+                if event.key == K_ESCAPE:
+                    return "exit"
+                if event.key == K_RETURN:
+                    return "countdown"
+                
+        windowsize = pygame.display.get_surface().get_size()
+
+        # 背景の描画
+        pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowsize[0], windowsize[1]))
+
+        font = pygame.font.Font("font/DigitalNormal-xO6j.otf", int(windowsize[1] / 2))
+        text = font.render("READY", True, (255, 255, 255))
+        self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1] / 2 - text.get_height() / 2))
+        return ""
+
     # カウントダウン画面
     def countdown(self):
 
@@ -381,10 +441,10 @@ class KyoroboTimer:
             # カウントダウンの描画
             
             if self.__count == 0:
-                font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 3))
-                text = font.render("START!", True, (255, 255, 255))
+                font = pygame.font.Font("font/DigitalNormal-xO6j.otf", int(windowsize[1] / 2))
+                text = font.render("START", True, (255, 255, 255))
             else:
-                font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 1 - windowsize[1] / 10))
+                font = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(windowsize[1] / 1.5 - windowsize[1] / 10))
                 text = font.render(str(self.__count), True, (255, 255, 255))
             self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1] / 2 - text.get_height() / 2))
 

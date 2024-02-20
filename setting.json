@@ -1,13 +1,13 @@
 {
-    "leftTeam": "Aチーム",
-    "rightTeam": "Bチーム",
+    "blueTeam": "大分A",
+    "redTeam": "熊本八代B",
     "score": 5,
     "time": {
-        "min": 2,
-        "sec": 30
+        "min": 5,
+        "sec": 0
     },
     "timerReverse": false,
-    "isSwap": false,
+    "isSwap": true,
     "key": {
         "left": {
             "up": "w",
