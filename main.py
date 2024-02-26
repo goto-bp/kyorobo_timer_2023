@@ -68,31 +68,11 @@ class KyoroboTimer:
     __loadFlag = 0
 
     # x,y,方向,色,速度,半径
-    __circleList = [[None,None,False,(147, 247, 255),None,None],
-                    [None,None,False,(147, 247, 255),None,None],
-                    [None,None,False,(147, 247, 255),None,None],
-                    [None,None,False,(147, 247, 255),None,None],
-                    [None,None,False,(147, 247, 255),None,None],
-                    [None,None,False,(147, 247, 255),None,None],
-                    [None,None,False,(255, 249, 132),None,None],
-                    [None,None,False,(255, 249, 132),None,None],
-                    [None,None,False,(255, 249, 132),None,None],
-                    [None,None,False,(255, 249, 132),None,None],
-                    [None,None,False,(255, 249, 132),None,None],
-                    [None,None,False,(255, 249, 132),None,None],
-                    [None,None,False,(187, 180, 250),None,None],
-                    [None,None,False,(187, 180, 250),None,None],
-                    [None,None,False,(187, 180, 250),None,None],
-                    [None,None,False,(187, 180, 250),None,None],
-                    [None,None,False,(187, 180, 250),None,None],
-                    [None,None,False,(187, 180, 250),None,None],
-                    [None,None,False,(200, 255, 200),None,None],
-                    [None,None,False,(200, 255, 200),None,None],
-                    [None,None,False,(200, 255, 200),None,None],
-                    [None,None,False,(200, 255, 200),None,None],
-                    [None,None,False,(200, 255, 200),None,None],
-                    [None,None,False,(200, 255, 200),None,None]]
-                        
+    __circleList = []
+
+
+    __colorList = [(147, 247, 255), (255, 249, 132), (187, 180, 250), (200, 255, 200), (255, 199, 94
+                                                                                        )]      
 
     beepHi = None
     beepLo = None
@@ -151,6 +131,16 @@ class KyoroboTimer:
 
     # 初期化処理
     def __init__(self, setting_file_path):
+        for i in range(1,10):
+            for j in range(len(self.__colorList)):
+                # print(self.__colorList[j][0] + i, self.__colorList[j][1] + i, self.__colorList[j][2] + i)
+                self.__colorList.append(
+                    (255 if self.__colorList[j][0] + i > 255 else self.__colorList[j][0] + i,
+                    255 if self.__colorList[j][1] + i > 255 else self.__colorList[j][1] + i,
+                    255 if self.__colorList[j][2] + i > 255 else self.__colorList[j][2] + i)
+                )
+            
+
         pygame.init()
         self.__settingFilePath = setting_file_path
 
@@ -279,33 +269,35 @@ class KyoroboTimer:
         # 背景の描画
         pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowsize[0], windowsize[1]))
 
-        for i in range(len(self.__circleList)):
-            if self.__circleList[i][0] == None:
-                if random.random() < 0.005:
-                    x = random.random()
-                    radius = random.uniform(0.5, 1)
-                    speed = random.uniform(0.005 / 4, 0.015 / 4)
-                    if random.random() < 0.5:
-                        self.__circleList[i] = (x, 0 - radius / 5, True, self.__circleList[i][3], speed, radius)
-                    else:
-                        self.__circleList[i] = (x, 1 + radius / 5, False, self.__circleList[i][3], speed, radius)
-                else:
-                    continue
+        if random.random() < 0.05 and len(self.__circleList) < 30:
+            x = random.random()
+            radius = random.uniform(0.5, 1)
+            speed = random.uniform(0.005 / 10, 0.015 / 4)
+            if random.random() < 0.5:
+                self.__circleList.append((x, 0 - radius / 5, True, self.__colorList[random.randint(0, len(self.__colorList) - 1)], speed, radius))
             else:
-                if self.__circleList[i][2]:
-                    self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] + self.__circleList[i][4], True, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
-                else:
-                    self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] - self.__circleList[i][4], False, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
+                self.__circleList.append((x, 1 + radius / 5, False, self.__colorList[random.randint(0, len(self.__colorList) - 1)], speed, radius))
+            
+        destIndex = []
+        newCircleList = []
 
-                if self.__circleList[i][1] < 0 - self.__circleList[i][5] / 5 or self.__circleList[i][1] > 1 + self.__circleList[i][5] / 5:
-                    self.__circleList[i] = (None, None, False, self.__circleList[i][3], None, None)
-                else:
-                    fixColor = (255 if self.__circleList[i][3][0] * self.__changeColor > 255 else self.__circleList[i][3][0] * self.__changeColor,
-                                255 if self.__circleList[i][3][1] * self.__changeColor > 255 else self.__circleList[i][3][1] * self.__changeColor,
-                                255 if self.__circleList[i][3][2] * self.__changeColor > 255 else self.__circleList[i][3][2] * self.__changeColor)
-                    
+        for i in range(len(self.__circleList)):
+            if self.__circleList[i][2]:
+                self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] + self.__circleList[i][4], True, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
+            else:
+                self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] - self.__circleList[i][4], False, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
 
-                    pygame.draw.circle(self.screen, fixColor, (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
+            if self.__circleList[i][1] < 0 - self.__circleList[i][5] / 5 or self.__circleList[i][1] > 1 + self.__circleList[i][5] / 5:
+                destIndex.append(i)
+            else:
+                fixColor = (255 if self.__circleList[i][3][0] * self.__changeColor > 255 else self.__circleList[i][3][0] * self.__changeColor,
+                            255 if self.__circleList[i][3][1] * self.__changeColor > 255 else self.__circleList[i][3][1] * self.__changeColor,
+                            255 if self.__circleList[i][3][2] * self.__changeColor > 255 else self.__circleList[i][3][2] * self.__changeColor)
+                
+
+                pygame.draw.circle(self.screen, fixColor, (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
+                newCircleList.append(self.__circleList[i])
+        self.__circleList = newCircleList
 
         if self.__changeColor > 1:
             self.__changeColor -= 0.1
@@ -382,6 +374,7 @@ class KyoroboTimer:
 
         return ""
 
+    # レディ画面
     def ready(self):
         for event in pygame.event.get():
             if event.type == QUIT:

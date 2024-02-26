@@ -1,10 +1,22 @@
 {
-    "blueTeam": "大分A",
-    "redTeam": "熊本八代B",
+    "blueTeam": "青チーム",
+    "redTeam": "赤チーム",
+    "teamNameList": [
+        "鹿児島A",
+        "鹿児島B",
+        "熊本八代B",
+        "熊本八代A",
+        "大分A",
+        "大分B",
+        "都城A",
+        "都城B",
+        "北九州A",
+        "北九州B"
+    ],
     "score": 5,
     "time": {
-        "min": 5,
-        "sec": 0
+        "min": 2,
+        "sec": 30
     },
     "timerReverse": false,
     "isSwap": true,
