@@ -527,9 +527,9 @@ class KyoroboTimer:
             first = self.__setTime["min"] * 60 + self.__setTime["sec"]
             min = int((first - now) / 60)
             sec = int((first - now) % 60)
-            time = str(min).zfill(2) + ":" + str(sec).zfill(2)
+            time = str(min) + ":" + str(sec).zfill(2)
         else:
-            time = str(self.__time["min"]).zfill(2) + ":" + str(self.__time["sec"]).zfill(2)
+            time = str(self.__time["min"]) + ":" + str(self.__time["sec"]).zfill(2)
         # timerFont = pygame.font.Font(object(self.__timerFontObject), int(windowSise[1] / 2 - windowSise[1] / 10))
         timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(windowSise[1] / 2 - windowSise[1] / 10))
 
