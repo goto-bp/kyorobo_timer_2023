@@ -71,8 +71,7 @@ class KyoroboTimer:
     __circleList = []
 
 
-    __colorList = [(147, 247, 255), (255, 249, 132), (187, 180, 250), (200, 255, 200), (255, 199, 94
-                                                                                        )]      
+    __colorList = [(147, 247, 255), (255, 249, 132), (187, 180, 250), (200, 255, 200), (255, 199, 94)]      
 
     beepHi = None
     beepLo = None
@@ -219,6 +218,9 @@ class KyoroboTimer:
                 self.__cursor["x"] = 0
             elif code == "ready":
                 nowFunction = self.ready
+            elif code == "teamName":
+                nowFunction = self.nameSetting
+                self.__cursor["y"] = 0
 
             pygame.time.wait(30)
 
@@ -341,6 +343,8 @@ class KyoroboTimer:
                         self.__loadFlag = 50
                     elif self.__cursor["y"] == 1:
                         return "timerSetting"
+                    elif self.__cursor["y"] == 0:
+                        return "teamName"
                     else:
                         self.beepLo.play()
         
@@ -765,6 +769,51 @@ class KyoroboTimer:
                 
     # チーム名設定画面
     def nameSetting(self):
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                        if self.screen.get_flags() & pygame.FULLSCREEN:
+                            self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
+                        else:
+                            self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+                if event.key == K_ESCAPE:
+                    return "setting"
+                if event.key == K_UP:
+                    self.__cursor["y"] -= 1
+                if event.key == K_DOWN:
+                    self.__cursor["y"] += 1
+            
+        if self.__cursor["y"] < 0:
+            self.__cursor["y"] = 2
+        if self.__cursor["y"] > 2:
+            self.__cursor["y"] = 0
+        
+        windowSize = pygame.display.get_surface().get_size()
+
+        # 背景の描画
+        pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowSize[0], windowSize[1]))
+
+        # プルダウンメニュー
+        font = pygame.font.SysFont(self.__setting["font"], int(windowSize[1] / 10))
+        text = font.render("チーム名", True, (0, 0, 0))
+        self.screen.blit(text, (windowSize[0] / 2 - text.get_width() / 2, windowSize[1] / 4 - text.get_height() / 2))
+
+        if self.__cursor["y"] == 0:
+            pygame.draw.rect(self.screen, self.__Red, Rect(windowSize[0] / 2 - text.get_width() / 2 - 10, windowSize[1] / 4 - text.get_height() / 2 - 10, text.get_width() + 20, text.get_height() + 20), 2)
+
+        text = font.render("左チーム", True, (0, 0, 0))
+        self.screen.blit(text, (windowSize[0] / 4 - text.get_width() / 2, windowSize[1] / 2 - text.get_height() / 2))
+        text = font.render("右チーム", True, (0, 0, 0))
+        self.screen.blit(text, (windowSize[0] * 3 / 4 - text.get_width() / 2, windowSize[1] / 2 - text.get_height() / 2))
+
+        if self.__cursor["y"] == 1:
+            pygame.draw.rect(self.screen, self.__Red, Rect(windowSize[0] / 4 - text.get_width() / 2 - 10, windowSize[1] / 2 - text.get_height() / 2 - 10, text.get_width() + 20, text.get_height() + 20), 2)
+        if self.__cursor["y"] == 2:
+            pygame.draw.rect(self.screen, self.__Red, Rect(windowSize[0] * 3 / 4 - text.get_width() / 2 - 10, windowSize[1] / 2 - text.get_height() / 2 - 10, text.get_width() + 20, text.get_height() + 20), 2)
+
+
 
         return ""
 
