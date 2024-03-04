@@ -83,6 +83,10 @@ class KyoroboTimer:
     subReloadFile = 0
     subChangeSwap = 0
 
+    isShowSetting = True
+
+    tmpScoreSetting = 0
+
     # 設定ファイルの読み込み
     def loadSetting(self):
         # 設定ファイルの読み込み
@@ -192,6 +196,9 @@ class KyoroboTimer:
             print(e)
 
         pygame.display.set_caption("共ロボタイマー")
+
+        # 使えるフォント一覧
+        print(pygame.font.get_fonts())
 
     # デストラクタ
     def __del__(self):
@@ -321,13 +328,17 @@ class KyoroboTimer:
                                 self.__settingTime["sec"] = self.__time["sec"]
                                 self.__cursor["y"] = 0
                                 self.__cursor["x"] = 0
-                            elif self.__cursor["y"] == 5:
-                                self.loadSetting()
-                                self.subReloadFile = 20
+                            elif self.__cursor["y"] == 2:
+                                self.tmpScoreSetting = self.__setting["score"]
+                                self.subFunctionIndex = 3
                             elif self.__cursor["y"] == 3:
                                 self.__setting["isSwap"] = not self.__setting["isSwap"]
                                 self.saveSetting()
                                 self.subChangeSwap = 20
+                            elif self.__cursor["y"] == 5:
+                                self.loadSetting()
+                                self.subReloadFile = 20
+                            
                             else:
                                 self.beepLo.play()
                     elif self.subFunctionIndex == 1:
@@ -377,7 +388,28 @@ class KyoroboTimer:
                         if event.key == K_ESCAPE:
                             self.subFunctionIndex = 0
                             self.__cursor["y"] = 0
-          
+                    elif self.subFunctionIndex == 3:
+                        if event.key == K_ESCAPE:
+                            self.subFunctionIndex = 0
+                            self.__cursor["y"] = 0
+                            self.__cursor["x"] = 0
+                        if event.key == K_UP:
+                            self.__cursor["x"] -= 1
+                        if event.key == K_DOWN:
+                            self.__cursor["x"] += 1
+                        if self.__cursor["x"] == 0:
+                            if event.key == K_RIGHT:
+                                self.tmpScoreSetting += 1
+                            if event.key == K_LEFT:
+                                self.tmpScoreSetting -= 1
+                        else:
+                            if event.key == K_RETURN:
+                                self.__setting["score"] = self.tmpScoreSetting
+                                self.saveSetting()
+                                self.subFunctionIndex = 0
+                                self.__cursor["y"] = 0
+                                self.__cursor["x"] = 0
+                                self.tmpScoreSetting = 0
 
         if self.subFunctionIndex == 0:
             if self.__cursor["y"] < 0:
@@ -397,7 +429,13 @@ class KyoroboTimer:
                 self.__cursor["x"] = 6
             if self.__cursor["x"] > 6:
                 self.__cursor["x"] = 0
-
+        elif self.subFunctionIndex == 3:
+            if self.tmpScoreSetting < 0:
+                self.tmpScoreSetting = 0
+            if self.__cursor["x"] < 0:
+                self.__cursor["x"] = 1
+            if self.__cursor["x"] > 1:
+                self.__cursor["x"] = 0
 
         windowsize = pygame.display.get_surface().get_size()
 
@@ -588,9 +626,65 @@ class KyoroboTimer:
 
             self.settingRenderer.present()
 
-  
+        def subScoreSetting():
+            self.settingRenderer.clear()
 
-        subFunctionList = [subSetting, subTimerSetting, subTeamNameSetting]
+            subWindowsize = self.settingWindow.size
+
+            text = "一度に増やすスコア"
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
+            text = font.render(text, True, (0,0,0))
+            text = sdl2.Texture.from_surface(self.settingRenderer, text)
+            text.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - text.get_rect().width / 2,
+                                          text.get_rect().height,
+                                          text.get_rect().width, text.get_rect().height))
+            
+            text = str(self.tmpScoreSetting)
+            font = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(subWindowsize[1] / 6))
+            if self.__cursor["x"] == 0:
+                text = font.render(text, True, (255,0,0))
+            else:
+                text = font.render(text, True, (0,0,0))
+            text = sdl2.Texture.from_surface(self.settingRenderer, text)
+            text.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - text.get_rect().width / 2,
+                                            subWindowsize[1] / 2 - text.get_rect().height / 2,
+                                            text.get_rect().width, text.get_rect().height))
+
+            text = "保存"
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
+            if self.__cursor["x"] == 1:
+                text = font.render(text, True, (255,0,0))
+            else:
+                text = font.render(text, True, (0,0,0))
+            text = sdl2.Texture.from_surface(self.settingRenderer, text)
+            text.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - text.get_rect().width / 2,
+                                            subWindowsize[1] / 2 + text.get_rect().height,
+                                            text.get_rect().width, text.get_rect().height))
+            
+            settingSurface = self.settingRenderer.to_surface()
+
+            pygame.draw.polygon(settingSurface, (0,0,0), [(subWindowsize[0] / 2 - text.get_rect().width / 2, subWindowsize[1] / 2),
+                                                                (subWindowsize[0] / 2 - text.get_rect().width / 2 - text.get_rect().height, subWindowsize[1] / 2 + text.get_rect().height),
+                                                                (subWindowsize[0] / 2 - text.get_rect().width / 2 + text.get_rect().height, subWindowsize[1] / 2 + text.get_rect().height / 2)])
+            pygame.draw.polygon(settingSurface, (0,0,0), [(subWindowsize[0] / 2 + text.get_rect().width / 2 + text.get_rect().height, subWindowsize[1] / 2),
+                                                                (subWindowsize[0] / 2 + text.get_rect().width / 2 + text.get_rect().height, subWindowsize[1] / 2 + text.get_rect().height),
+                                                                (subWindowsize[0] / 2 + text.get_rect().width / 2 + text.get_rect().height * 2, subWindowsize[1] / 2 + text.get_rect().height / 2)])
+            tex = sdl2.Texture.from_surface(self.settingRenderer, settingSurface)
+            tex.draw()
+                                                                
+            
+            self.settingRenderer.present()
+
+        def test():
+            self.settingRenderer.clear()
+
+            subWindowsize = self.settingWindow.size
+
+            tex = sdl2.Texture.from_surface(self.settingRenderer, self.screen)
+            tex.draw(dstrect=pygame.Rect(0, 0, subWindowsize[0], subWindowsize[1]))
+            self.settingRenderer.present()
+
+        subFunctionList = [subSetting, subTimerSetting, subTeamNameSetting, test]
 
         subFunctionList[self.subFunctionIndex]()
 
