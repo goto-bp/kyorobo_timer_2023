@@ -1,31 +1,52 @@
 {
-    "leftTeam" : "明野高専Bチーム",
-    "rightTeam" : "鶴見高専Aチーム",
-    "score" : 5,
-    "time" : {
-        "min" : 2,
-        "sec" : 30
+    "redTeam": "赤チーム",
+    "blueTeam": "青チーム",
+    "teamNameList": [
+        "沖縄A",
+        "沖縄B",
+        "鹿児島A",
+        "鹿児島B",
+        "熊本八代A",
+        "熊本八代B",
+        "熊本熊本A",
+        "熊本熊本B",
+        "大分A",
+        "大分B",
+        "北九州A",
+        "北九州B",
+        "久留米A",
+        "久留米B",
+        "有明A",
+        "有明B"
+    ],
+    "score": 3,
+    "time": {
+        "min": 3,
+        "sec": 0
     },
-    "isSwap" : false,
-    "key" : {
-        "left" : {
-            "up" : "w",
-            "down" : "s",
-            "nup" : "d",
-            "ndown" : "a"
+    "timerReverse": false,
+    "isSwap": false,
+    "key": {
+        "left": {
+            "up": "w",
+            "down": "s",
+            "nup": "d",
+            "ndown": "a",
+            "reset": "1"
         },
-        "right" : {
-            "up" : "up",
-            "down" : "down",
-            "nup" : "right",
-            "ndown" : "left"
+        "right": {
+            "up": "up",
+            "down": "down",
+            "nup": "right",
+            "ndown": "left",
+            "reset": "2"
         },
-        "swap" : "space"
+        "swap": "space"
     },
-    "resolution" : {
-        "width" : 800,
-        "height" : 450
+    "resolution": {
+        "width": 800,
+        "height": 450
     },
-    "title" : "共ロボタイマー",
-    "font" : "Meiryo"
+    "title": "共ロボタイマー",
+    "font": "yugothicuisemibold"
 }

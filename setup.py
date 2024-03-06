@@ -7,7 +7,8 @@ build_exe_options = {
     "packages":[
         "pygame",
         "json",
-        "sys"
+        "sys",
+        "random"
     ],
     "include_files":[
         "setting.json",
@@ -26,7 +27,7 @@ if sys.platform == "win32":
 
 setup(
     name="KyoroboTimer",
-    version="0.81",
+    version="0.95",
     description="Timer App",
     options={"build_exe": build_exe_options},
     executables=[Executable("main.py", base=base)]

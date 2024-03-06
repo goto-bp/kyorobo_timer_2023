@@ -87,6 +87,33 @@ class KyoroboTimer:
 
     tmpScoreSetting = 0
 
+    fullscreenFlag = False
+
+    # イベントの共通部分
+    def windowEvent(self, event):
+        if event.type == QUIT:
+            sys.exit()
+        if getattr(event, "window", None) == self.settingWindow:
+                if event.type == WINDOWCLOSE:
+                    self.settingWindow.hide()
+                    self.isShowSetting = False
+                if event.type == WINDOWFOCUSGAINED:
+                    self.forcusWindow = "sub"
+        elif getattr(event, "window", None) == self.mainWindow:
+                if event.type == WINDOWCLOSE:
+                    sys.exit()
+                if event.type == WINDOWFOCUSGAINED:
+                    self.forcusWindow = "main"
+        if self.forcusWindow == "main":
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    if self.fullscreenFlag:
+                        self.mainWindow.set_windowed()
+                        self.fullscreenFlag = False
+                    else:
+                        self.mainWindow.set_fullscreen(True)
+                        self.fullscreenFlag = True
+                    
     # 設定ファイルの読み込み
     def loadSetting(self):
         # 設定ファイルの読み込み
@@ -156,18 +183,21 @@ class KyoroboTimer:
 
         self.loadSetting()
 
-        self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
+        self.screen = pygame.Surface((800, 450))
+
+        self.mainWindow = sdl2.Window("main", size=(800, 450), resizable=True)
+        self.mainRenderer = sdl2.Renderer(self.mainWindow)
 
         self.settingWindow = sdl2.Window("setting", size=(800, 450), resizable=True)
         self.settingRenderer = sdl2.Renderer(self.settingWindow)
-        # self.isShowSetting = False
-        # self.settingWindow.hide()
+        self.isShowSetting = False
+        self.settingWindow.hide()
         self.settingRenderer.draw_color = (255, 255, 255, 255)
 
         # アイコンの読み込み
         try:
             self.__icon = pygame.image.load("img/icon.png")
-            pygame.display.set_icon(self.__icon)
+            self.mainWindow.set_icon(self.__icon)
             self.settingWindow.set_icon(self.__icon)
         except Exception as e:
             print("アイコンの読み込みに失敗しました。")
@@ -195,11 +225,6 @@ class KyoroboTimer:
             print("ロゴの読み込みに失敗しました。")
             print(e)
 
-        pygame.display.set_caption("共ロボタイマー")
-
-        # 使えるフォント一覧
-        print(pygame.font.get_fonts())
-
     # デストラクタ
     def __del__(self):
         pygame.quit()
@@ -209,6 +234,8 @@ class KyoroboTimer:
         nowFunction = self.title
         
         while True:
+            self.mainRenderer.clear()
+            
             code = nowFunction()
 
             if code == "exit":
@@ -227,27 +254,14 @@ class KyoroboTimer:
                 self.__setTime["sec"] = self.__time["sec"]
                 pygame.time.set_timer(USEREVENT, 1000)
                 self.__count = 5
-            elif code == "setting":
-                nowFunction = self.setting
-                self.__cursor["y"] = 0
-            elif code == "preview":
-                nowFunction = self.preview
-            elif code == "timerSetting":
-                nowFunction = self.timerSetting
-                self.__tmpTimeReverse = self.__setting["timerReverse"]
-                self.__settingTime["min"] = self.__time["min"]
-                self.__settingTime["sec"] = self.__time["sec"]
-                self.__cursor["y"] = 0
-                self.__cursor["x"] = 0
             elif code == "ready":
                 nowFunction = self.ready
-            elif code == "teamName":
-                nowFunction = self.nameSetting
-                self.__cursor["y"] = 0
+
+            tex = sdl2.Texture.from_surface(self.mainRenderer, self.screen)
+            tex.draw()
+            self.mainRenderer.present()
 
             pygame.time.wait(30)
-
-            pygame.display.update()
 
     # タイトル画面
     def title(self):
@@ -255,29 +269,13 @@ class KyoroboTimer:
         settingElem = ["チーム名", "時間設定", "一度に増やすスコア", "左右入れ替え", "キーコンフィグ", "設定ファイルの再読み込み", "プレビュー"]
 
         for event in pygame.event.get():
-            # print(event)
-            if event.type == QUIT:
-                sys.exit()
-            if getattr(event, "window", None) == self.settingWindow:
-                if event.type == WINDOWCLOSE:
-                    self.settingWindow.hide()
-                    self.isShowSetting = False
-                if event.type == WINDOWFOCUSGAINED:
-                    self.forcusWindow = "sub"
-            elif getattr(event, "window", None) == None:
-                if event.type == WINDOWCLOSE:
-                    sys.exit()
-                if event.type == WINDOWFOCUSGAINED:
-                    self.forcusWindow = "main"
+            
+            self.windowEvent(event)
+
             if self.forcusWindow == "main":
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
                         sys.exit()
-                    if event.key == K_F11:
-                        if self.screen.get_flags() & pygame.FULLSCREEN:
-                            self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                        else:
-                            self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
                     if event.key == K_F5:
                         self.loadSetting()
                         self.__changeColor = 2
@@ -437,7 +435,9 @@ class KyoroboTimer:
             if self.__cursor["x"] > 1:
                 self.__cursor["x"] = 0
 
-        windowsize = pygame.display.get_surface().get_size()
+        windowsize = self.mainWindow.size
+        self.screen = pygame.Surface(windowsize)
+
 
         # 背景の描画
         pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowsize[0], windowsize[1]))
@@ -684,94 +684,26 @@ class KyoroboTimer:
             tex.draw(dstrect=pygame.Rect(0, 0, subWindowsize[0], subWindowsize[1]))
             self.settingRenderer.present()
 
-        subFunctionList = [subSetting, subTimerSetting, subTeamNameSetting, test]
+        subFunctionList = [subSetting, subTimerSetting, subTeamNameSetting, subScoreSetting]
 
         subFunctionList[self.subFunctionIndex]()
-
-        return ""
-
-    # 設定画面
-    def setting(self):
-        settingElem = ["チーム名", "時間設定", "一度に増やすスコア", "左右入れ替え", "キーコンフィグ", "設定ファイルの再読み込み", "プレビュー", "戻る"]
-
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit()
-            if event.type == KEYDOWN:
-                if event.key == K_F11:
-                        if self.screen.get_flags() & pygame.FULLSCREEN:
-                            self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                        else:
-                            self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-                
-                if event.key == K_ESCAPE:
-                    return "exit"
-                if event.key == K_UP:
-                    self.__cursor["y"] -= 1
-                if event.key == K_DOWN:
-                    self.__cursor["y"] += 1
-                if event.key == K_RETURN:
-                    if self.__cursor["y"] == 7:
-                        return "exit"
-                    elif self.__cursor["y"] == 6:
-                        return "preview"
-                    elif self.__cursor["y"] == 5:
-                        self.loadSetting()
-                        self.__loadFlag = 50
-                    elif self.__cursor["y"] == 1:
-                        return "timerSetting"
-                    elif self.__cursor["y"] == 0:
-                        return "teamName"
-                    else:
-                        self.beepLo.play()
-        
-
-        if self.__cursor["y"] < 0:
-            self.__cursor["y"] = len(settingElem) - 1
-        if self.__cursor["y"] > len(settingElem) - 1:
-            self.__cursor["y"] = 0
-
-
-        windowsize = pygame.display.get_surface().get_size()
-
-        # 背景の描画
-        pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowsize[0], windowsize[1]))
-
-
-        font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / (10 + len(settingElem))))
-        textList = []
-        for i in range(len(settingElem)):
-            text = font.render(settingElem[i], True, (0, 0, 0))
-            textList.append(text)
-            self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1]* (i + 1.5) / (len(settingElem) + 2)  - text.get_height() / 2))
-
-        pygame.draw.rect(self.screen, self.__Red, Rect(windowsize[0] / 2 - textList[self.__cursor["y"]].get_width() / 2 - 10, windowsize[1]* (self.__cursor["y"] + 1.5) / (len(settingElem) + 2) - textList[self.__cursor["y"]].get_height() / 2, textList[self.__cursor["y"]].get_width() + 20, textList[self.__cursor["y"]].get_height()), 2)
-        
-        if self.__loadFlag > 0:
-            self.__loadFlag -= 1
-            font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 10))
-            text = font.render("設定を再読み込みしました。", True, (255,0,0))
-            self.screen.blit(text, (windowsize[0] / 2 - text.get_width() / 2, windowsize[1] / 2 - text.get_height() / 2))
 
         return ""
 
     # レディ画面
     def ready(self):
         for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit()
+            
+            self.windowEvent(event)
+            
             if event.type == KEYDOWN:
-                if event.key == K_F11:
-                    if self.screen.get_flags() & pygame.FULLSCREEN:
-                        self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                    else:
-                        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
                 if event.key == K_ESCAPE:
                     return "exit"
                 if event.key == K_RETURN:
                     return "countdown"
                 
-        windowsize = pygame.display.get_surface().get_size()
+        windowsize = self.mainWindow.size
+        self.screen = pygame.Surface(windowsize)
 
         # 背景の描画
         pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowsize[0], windowsize[1]))
@@ -785,6 +717,9 @@ class KyoroboTimer:
     def countdown(self):
 
         for event in pygame.event.get():
+
+            self.windowEvent(event)
+
             if event.type == USEREVENT:
                 self.__count -= 1
                 if self.__count == -1:
@@ -794,26 +729,19 @@ class KyoroboTimer:
                     self.beepHi.play()
                 elif self.__count <= 3:
                     self.beepLo.play()
-            if event.type == QUIT:
-                sys.exit()
 
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.time.set_timer(USEREVENT, 0)
                     return "exit"
-                if event.key == K_F11:
-                    if self.screen.get_flags() & pygame.FULLSCREEN:
-                        self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                    else:
-                        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
                 
-            windowsize = pygame.display.get_surface().get_size()
+            windowsize = self.mainWindow.size
+            self.screen = pygame.Surface(windowsize)
 
             # 背景の描画
             pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowsize[0], windowsize[1]))
 
             # カウントダウンの描画
-            
             if self.__count == 0:
                 font = pygame.font.Font("font/DigitalNormal-xO6j.otf", int(windowsize[1] / 2))
                 text = font.render("START", True, (255, 255, 255))
@@ -828,6 +756,9 @@ class KyoroboTimer:
     # タイマー画面
     def timer(self):
         for event in pygame.event.get():
+
+            self.windowEvent(event)
+
             if event.type == USEREVENT:
                 time = self.__time["min"] * 60 + self.__time["sec"]
                 time -= 1
@@ -840,20 +771,10 @@ class KyoroboTimer:
                 elif time <= 3:
                     self.beepLo.play()
 
-            if event.type == QUIT:
-                sys.exit()
-
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.time.set_timer(USEREVENT, 0)
                     return "exit"
-
-
-                if event.key == K_F11:
-                    if self.screen.get_flags() & pygame.FULLSCREEN:
-                        self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                    else:
-                        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
 
                 if event.key == self.__leftKeys["up"]:
                     self.__leftTeam["score"] += 1
@@ -886,7 +807,8 @@ class KyoroboTimer:
         if(self.__rightTeam["score"] < 0):
             self.__rightTeam["score"] = 0
 
-        windowSise = pygame.display.get_surface().get_size()
+        windowSise = self.mainWindow.size
+        self.screen = pygame.Surface(windowSise)
 
         # 背景の描画
         pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowSise[0], windowSise[1]))
@@ -941,307 +863,6 @@ class KyoroboTimer:
 
         self.screen.blit(leftTeamName, (windowSise[0] / 4 - leftTeamName.get_width() / 2, windowSise[1] * 9 / 20 - leftTeamName.get_height() / 2))
         self.screen.blit(rightTeamName, (windowSise[0] * 3 / 4 - rightTeamName.get_width() / 2, windowSise[1] * 9 / 20 - rightTeamName.get_height() / 2))
-
-        return ""
-
-    # プレビュー画面
-    def preview(self):
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit()
-
-            if event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    self.__time["min"] = self.__setting["time"]["min"]
-                    self.__time["sec"] = self.__setting["time"]["sec"]
-                    self.__leftTeam["score"] = 0
-                    self.__rightTeam["score"] = 0
-                    return "setting"
-
-
-                if event.key == K_F11:
-                    if self.screen.get_flags() & pygame.FULLSCREEN:
-                        self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                    else:
-                        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-
-                if event.key == self.__leftKeys["up"]:
-                    self.__leftTeam["score"] += 1
-                if event.key == self.__leftKeys["down"]:
-                    self.__leftTeam["score"] -= 1
-                if event.key == self.__leftKeys["nup"]:
-                    self.__leftTeam["score"] += self.__setting["score"]
-                if event.key == self.__leftKeys["ndown"]:
-                    self.__leftTeam["score"] -= self.__setting["score"]
-                if event.key == self.__leftKeys["reset"]:
-                    self.__leftTeam["score"] = 0
-
-                if event.key == self.__rightKeys["up"]:
-                    self.__rightTeam["score"] += 1
-                if event.key == self.__rightKeys["down"]:
-                    self.__rightTeam["score"] -= 1
-                if event.key == self.__rightKeys["nup"]:
-                    self.__rightTeam["score"] += self.__setting["score"]
-                if event.key == self.__rightKeys["ndown"]:
-                    self.__rightTeam["score"] -= self.__setting["score"]
-                if event.key == self.__rightKeys["reset"]:
-                    self.__rightTeam["score"] = 0
-
-                if event.key == self.__swapKey:
-                    self.__swap = not self.__swap
-                    self.__leftTeam, self.__rightTeam = self.__rightTeam, self.__leftTeam
-
-        if(self.__leftTeam["score"] < 0):
-            self.__leftTeam["score"] = 0
-        if(self.__rightTeam["score"] < 0):
-            self.__rightTeam["score"] = 0
-
-        windowSise = pygame.display.get_surface().get_size()
-
-        # 背景の描画
-        pygame.draw.rect(self.screen, (0, 0, 0), Rect(0, 0, windowSise[0], windowSise[1]))
-
-        if self.__swap:
-            leftColor = self.__Red
-            rightColor = self.__Blue
-        else:
-            leftColor = self.__Blue
-            rightColor = self.__Red
-
-        pygame.draw.rect(self.screen, leftColor, Rect(0, 0, windowSise[0] / 2, windowSise[1] * 4 / 10))
-        pygame.draw.rect(self.screen, rightColor, Rect(windowSise[0] / 2, 0, windowSise[0] / 2, windowSise[1] * 4 / 10))
-        pygame.draw.rect(self.screen, (20, 20, 20), Rect(0, windowSise[1] * 4 / 10, windowSise[0], windowSise[1] / 10))
-
-        # タイマーの描画
-        time = str(self.__time["min"]).zfill(2) + ":" + str(self.__time["sec"]).zfill(2)
-        # timerFont = pygame.font.Font(object(self.__timerFontObject), int(windowSise[1] / 2 - windowSise[1] / 10))
-        timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(windowSise[1] / 2 - windowSise[1] / 10))
-
-        if time == "00:00":
-            timerText = timerFont.render(time, True, self.__Red)
-        else:
-            timerText = timerFont.render(time, True, (255, 255, 255))
-        self.screen.blit(timerText, (windowSise[0] / 2 - timerText.get_width() / 2, windowSise[1] * 3 / 4 - timerText.get_height() / 2))
-
-        # スコアの描画
-        scoreFont = pygame.font.SysFont(self.__setting["font"], int(windowSise[1] * 4 / 10))
-
-        leftTeamText = scoreFont.render(str(self.__leftTeam["score"]), True, (255, 255, 255))
-        rightTeamText = scoreFont.render(str(self.__rightTeam["score"]), True, (255, 255, 255))
-        self.screen.blit(leftTeamText, (windowSise[0] / 4 - leftTeamText.get_width() / 2, windowSise[1] * 4 / 20 - leftTeamText.get_height() / 2))
-        self.screen.blit(rightTeamText, (windowSise[0] * 3 / 4 - rightTeamText.get_width() / 2, windowSise[1] * 4 / 20 - rightTeamText.get_height() / 2))
-
-        # チーム名の描画
-        font = pygame.font.SysFont(self.__setting["font"], int(windowSise[1] / 10 - (windowSise[1] / 10) / 4))
-
-        leftTeamName = font.render(self.__leftTeam["name"], True, (255, 255, 255))
-        rightTeamName = font.render(self.__rightTeam["name"], True, (255, 255, 255))
-        self.screen.blit(leftTeamName, (windowSise[0] / 4 - leftTeamName.get_width() / 2, windowSise[1] * 9 / 20 - leftTeamName.get_height() / 2))
-        self.screen.blit(rightTeamName, (windowSise[0] * 3 / 4 - rightTeamName.get_width() / 2, windowSise[1] * 9 / 20 - rightTeamName.get_height() / 2))
-
-        return ""
-
-    # タイマー設定画面
-    def timerSetting(self):
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit()
-            if event.type == KEYDOWN:
-                if event.key == K_F11:
-                        if self.screen.get_flags() & pygame.FULLSCREEN:
-                            self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                        else:
-                            self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-                
-                if event.key == K_ESCAPE:
-                    return "setting"
-                if event.key == K_UP:
-                    if self.__cursor["x"] == 0:
-                        self.__settingTime["min"] += 10
-                    if self.__cursor["x"] == 1:
-                        self.__settingTime["min"] += 1
-                    if self.__cursor["x"] == 3:
-                        self.__settingTime["sec"] += 10
-                    if self.__cursor["x"] == 4:
-                        self.__settingTime["sec"] += 1
-                if event.key == K_DOWN:
-                    if self.__cursor["x"] == 0:
-                        self.__settingTime["min"] -= 10
-                    if self.__cursor["x"] == 1:
-                        self.__settingTime["min"] -= 1
-                    if self.__cursor["x"] == 3:
-                        self.__settingTime["sec"] -= 10
-                    if self.__cursor["x"] == 4:
-                        self.__settingTime["sec"] -= 1
-                if event.key == K_LEFT:
-                    self.__cursor["x"] -= 1
-                    if self.__cursor["x"] == 2:
-                        self.__cursor["x"] -= 1
-                if event.key == K_RIGHT:
-                    self.__cursor["x"] += 1
-                    if self.__cursor["x"] == 2:
-                        self.__cursor["x"] += 1
-                if event.key == K_RETURN:
-                    if self.__cursor["x"] == 6:
-                        self.__time = self.__settingTime
-                        self.__setting["time"]["min"] = self.__time["min"]
-                        self.__setting["time"]["sec"] = self.__time["sec"]
-                        self.__setting["timerReverse"] = self.__tmpTimeReverse
-                        self.saveSetting()
-                        return "setting"
-                    if self.__cursor["x"] == 5:
-                        self.__tmpTimeReverse = not self.__tmpTimeReverse
-        
-        if self.__settingTime["min"] < 0:
-            self.__settingTime["min"] = 99
-        if self.__settingTime["min"] > 99:
-            self.__settingTime["min"] = 0
-        if self.__settingTime["sec"] < 0:
-            self.__settingTime["sec"] = 59
-        if self.__settingTime["sec"] > 59:
-            self.__settingTime["sec"] = 0
-        
-                
-        if self.__cursor["x"] < 0:
-            self.__cursor["x"] = 6
-        if self.__cursor["x"] > 6:
-            self.__cursor["x"] = 0
-
-        windowSize = pygame.display.get_surface().get_size()
-
-        # 背景の描画
-        pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowSize[0], windowSize[1]))
-
-        timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(windowSize[1] / 2 - windowSize[1] / 5))
-        charList = [int(self.__settingTime["min"] / 10), self.__settingTime["min"] % 10, ":", int(self.__settingTime["sec"] / 10), self.__settingTime["sec"] % 10]
-        textList = []
-        for i in range(len(charList)):
-            if i == self.__cursor["x"]:
-                text = timerFont.render(str(charList[i]), True, self.__Red)
-            else:
-                text = timerFont.render(str(charList[i]), True, (0, 0, 0))
-            textList.append(text)
-            self.screen.blit(text, (windowSize[0] * (i + 2) / 8 - text.get_width() / 2, windowSize[1] / 2 - text.get_height() / 2))
-        
-        font = pygame.font.SysFont(self.__setting["font"], int(windowSize[1] / 10))
-        if self.__cursor["x"] == 6:
-            text = font.render("保存", True, (255, 0, 0))
-        else:
-            text = font.render("保存", True, (0, 0, 0))
-        self.screen.blit(text, (windowSize[0] * 3 / 4 - text.get_width() / 2, windowSize[1] * 3 / 4 - text.get_height() / 2))
-
-        reverseText = ""
-        if self.__tmpTimeReverse:
-            reverseText = "カウントダウン"
-        else:
-            reverseText = "カウントアップ"
-
-        if self.__cursor["x"] == 5:
-            text = font.render(reverseText, True, (255, 0, 0))
-        else:
-            text = font.render(reverseText, True, (0, 0, 0))
-        self.screen.blit(text, (windowSize[0] * 1 / 4 - text.get_width() / 2, windowSize[1] * 3 / 4 - text.get_height() / 2))
-
-        return ""
-                
-    # チーム名設定画面
-    def nameSetting(self):
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit()
-            if event.type == KEYDOWN:
-                if event.key == K_F11:
-                        if self.screen.get_flags() & pygame.FULLSCREEN:
-                            self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                        else:
-                            self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-                if event.key == K_ESCAPE:
-                    return "setting"
-                if event.key == K_UP:
-                    self.__cursor["y"] -= 1
-                if event.key == K_DOWN:
-                    self.__cursor["y"] += 1
-            
-        if self.__cursor["y"] < 0:
-            self.__cursor["y"] = 2
-        if self.__cursor["y"] > 2:
-            self.__cursor["y"] = 0
-        
-        windowSize = pygame.display.get_surface().get_size()
-
-        # 背景の描画
-        pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowSize[0], windowSize[1]))
-
-        # プルダウンメニュー
-        font = pygame.font.SysFont(self.__setting["font"], int(windowSize[1] / 10))
-        text = font.render("チーム名", True, (0, 0, 0))
-        self.screen.blit(text, (windowSize[0] / 2 - text.get_width() / 2, windowSize[1] / 4 - text.get_height() / 2))
-
-        if self.__cursor["y"] == 0:
-            pygame.draw.rect(self.screen, self.__Red, Rect(windowSize[0] / 2 - text.get_width() / 2 - 10, windowSize[1] / 4 - text.get_height() / 2 - 10, text.get_width() + 20, text.get_height() + 20), 2)
-
-        text = font.render("左チーム", True, (0, 0, 0))
-        self.screen.blit(text, (windowSize[0] / 4 - text.get_width() / 2, windowSize[1] / 2 - text.get_height() / 2))
-        text = font.render("右チーム", True, (0, 0, 0))
-        self.screen.blit(text, (windowSize[0] * 3 / 4 - text.get_width() / 2, windowSize[1] / 2 - text.get_height() / 2))
-
-        if self.__cursor["y"] == 1:
-            pygame.draw.rect(self.screen, self.__Red, Rect(windowSize[0] / 4 - text.get_width() / 2 - 10, windowSize[1] / 2 - text.get_height() / 2 - 10, text.get_width() + 20, text.get_height() + 20), 2)
-        if self.__cursor["y"] == 2:
-            pygame.draw.rect(self.screen, self.__Red, Rect(windowSize[0] * 3 / 4 - text.get_width() / 2 - 10, windowSize[1] / 2 - text.get_height() / 2 - 10, text.get_width() + 20, text.get_height() + 20), 2)
-
-
-
-        return ""
-
-    # キーコンフィグ画面
-    def keyConfig(self):
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                sys.exit()
-            if event.type == KEYDOWN:
-                if event.key == K_F11:
-                        if self.screen.get_flags() & pygame.FULLSCREEN:
-                            self.screen = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
-                        else:
-                            self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-                
-                if event.key == K_ESCAPE:
-                    return "setting"
-                if event.key == K_UP:
-                    self.__cursor["y"] -= 1
-                if event.key == K_DOWN:
-                    self.__cursor["y"] += 1
-                if event.key == K_LEFT:
-                    self.__cursor["x"] -= 1
-                if event.key == K_RIGHT:
-                    self.__cursor["x"] += 1
-                if event.key == K_RETURN:
-                    return "setting"
-                
-        if self.__cursor["y"] < 0:
-            self.__cursor["y"] = 0
-        if self.__cursor["x"] < 0:
-            self.__cursor["x"] = 1
-        if self.__cursor["x"] > 1:
-            self.__cursor["x"] = 0
-
-        # self.__leftKeys = {
-        #     "up" : pygame.key.key_code(self.__setting["key"]["left"]["up"]),
-        #     "down" : pygame.key.key_code(self.__setting["key"]["left"]["down"]),
-        #     "nup" : pygame.key.key_code(self.__setting["key"]["left"]["nup"]),
-        #     "ndown" : pygame.key.key_code(self.__setting["key"]["left"]["ndown"]),
-        #     "reset" : pygame.key.key_code(self.__setting["key"]["left"]["reset"])
-        # }
-        # self.__rightKeys = {
-        #     "up" : pygame.key.key_code(self.__setting["key"]["right"]["up"]),
-        #     "down" : pygame.key.key_code(self.__setting["key"]["right"]["down"]),
-        #     "nup" : pygame.key.key_code(self.__setting["key"]["right"]["nup"]),
-        #     "ndown" : pygame.key.key_code(self.__setting["key"]["right"]["ndown"]),
-        #     "reset" : pygame.key.key_code(self.__setting["key"]["right"]["reset"])
-        # }
-        # self.__swapKey = pygame.key.key_code(self.__setting["key"]["swap"])
-
 
         return ""
 

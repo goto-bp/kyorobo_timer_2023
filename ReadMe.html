@@ -27,8 +27,8 @@
 <h1 id="概要">概要 </h1>
 <h1 id="使い方">使い方 </h1>
 <h2 id="共通">共通 </h2>
-<p>f11でフルスクリーン(非推奨)<br>
-escキーで一つ前の画面に戻る</p>
+<p>f11でフルスクリーン<br>
+escキーで一つ前の画面に戻る．タイトル画面だとアプリケーションの終了</p>
 <h2 id="タイトル画面">タイトル画面 </h2>
 <p>エンターキーで開始<br>
 スペースキーを押すことでREADYを省略して開始<br>
@@ -46,10 +46,11 @@ F5キーで設定ファイルの再読み込みを行うことができる<br>
 カウントアップ項目を選択するとカウントアップorダウンが切り替えることができる<br>
 escキーで戻ると設定が保存されない</p>
 <h3 id="一度に増やす点数決め">一度に増やす点数決め </h3>
-<p>※準備中</p>
+<p>一度に何点を増やすかを変更できる<br>
+上下キーで項目の変更<br>
+左右キーで値の変更</p>
 <h3 id="左右入れ替え">左右入れ替え </h3>
-<p>※準備中<br>
-デフォルトは左が「赤」右が「青」<br>
+<p>デフォルトは左が「赤」右が「青」<br>
 入れ替えると色が逆になる</p>
 <h3 id="キーコンフィグ">キーコンフィグ </h3>
 <p>※準備中<br>
@@ -91,13 +92,13 @@ escキー</li>
 <h2 id="settingjson">setting.json </h2>
 <p>設定情報が入ったファイル．ここを直接編集することで設定を変更することもできる．タイマーを起動中に変更した時は設定画面から「設定ファイルの再読み込み」を選択することで設定を反映させることができる．</p>
 <ul>
-<li>blueTeam<br>
-青側のチーム名を入れる</li>
 <li>redTeam<br>
 赤側のチーム名を入れる</li>
+<li>blueTeam<br>
+青側のチーム名を入れる</li>
 <li>score<br>
 nup,ndownキーで一度に下げる点数を入れる<br>
-ex:5を入れると一度に5点上下できる</li>
+例:5を入れると一度に5点上下できる</li>
 <li>time<br>
 タイマーの時間を入れる
 <ul>
@@ -114,22 +115,22 @@ ex:5を入れると一度に5点上下できる</li>
 falseで左が青，右が赤<br>
 trueで左が赤，右が青</li>
 <li>key<br>
-タイマー画面でのキーの設定<br>
-"left": {// 左の操作<br>
-"up": "w", //1点増やす<br>
-"down": "s",//1点減らす<br>
-"nup": "d",//scoreで設定した点数だけ増やす<br>
-"ndown": "a",//scoreで設定した点数だけ減らす<br>
-"reset": "1"//リセット(0点にする)<br>
-},<br>
-"right": {// 右の操作<br>
-"up": "up",<br>
-"down": "down",<br>
-"nup": "right",<br>
-"ndown": "left",<br>
-"reset": "2"<br>
-},<br>
-"swap": "space" // 左右の入れ替え</li>
+タイマー画面でのキーの設定<pre data-role="codeBlock" data-info="json" class="language-json json"><code>    <span class="token property">"left"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token comment">// 左の操作</span>
+        <span class="token property">"up"</span><span class="token operator">:</span> <span class="token string">"w"</span><span class="token punctuation">,</span> <span class="token comment">//1点増やす</span>
+        <span class="token property">"down"</span><span class="token operator">:</span> <span class="token string">"s"</span><span class="token punctuation">,</span><span class="token comment">//1点減らす</span>
+        <span class="token property">"nup"</span><span class="token operator">:</span> <span class="token string">"d"</span><span class="token punctuation">,</span><span class="token comment">//scoreで設定した点数だけ増やす</span>
+        <span class="token property">"ndown"</span><span class="token operator">:</span> <span class="token string">"a"</span><span class="token punctuation">,</span><span class="token comment">//scoreで設定した点数だけ減らす</span>
+        <span class="token property">"reset"</span><span class="token operator">:</span> <span class="token string">"1"</span><span class="token comment">//リセット(0点にする)</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"right"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token comment">// 右の操作</span>
+        <span class="token property">"up"</span><span class="token operator">:</span> <span class="token string">"up"</span><span class="token punctuation">,</span>
+        <span class="token property">"down"</span><span class="token operator">:</span> <span class="token string">"down"</span><span class="token punctuation">,</span>
+        <span class="token property">"nup"</span><span class="token operator">:</span> <span class="token string">"right"</span><span class="token punctuation">,</span>
+        <span class="token property">"ndown"</span><span class="token operator">:</span> <span class="token string">"left"</span><span class="token punctuation">,</span>
+        <span class="token property">"reset"</span><span class="token operator">:</span> <span class="token string">"2"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"swap"</span><span class="token operator">:</span> <span class="token string">"space"</span> <span class="token comment">// 左右の入れ替え</span>
+</code></pre></li>
 <li>resolution<br>
 初期解像度(使われてない)</li>
 <li>title<br>
@@ -142,6 +143,12 @@ trueで左が赤，右が青</li>
 <li>ver0.81<br>
 jsonファイルのleftTeam,rightTeamをblueTeam,redTeamに変更<br>
 タイトル画面での設定変更を可能に</li>
+<li>ver0.9<br>
+設定画面を別ウィンドウで変更できるように<br>
+その他jsonの形式を一部変更</li>
+<li>ver0.95<br>
+フルスクリーンへの完全対応<br>
+フォントをメイリオから游ゴシックに変更</li>
 </ul>
 
       </div>
@@ -232,7 +239,7 @@ jsonファイルのleftTeam,rightTeamをblueTeam,redTeamに変更<br>
     
     
 <script>
-document.body.setAttribute('html-show-sidebar-toc', true)
+
 var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
 sidebarTOCBtn.addEventListener('click', function(event) {
   event.stopPropagation()
