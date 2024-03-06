@@ -113,6 +113,12 @@ escキーで前の画面に戻る
 - font
     使用するフォント
 
+# バグ，不具合等
+- 起動して長時間放置した後にタイマーを動かすと操作にラグが発生する
+    しないときもあるため調査中
+その他バグ，不具合等見つかった場合は
+共ロボDiscordの後藤まで
+
 # 更新情報
 - ver0.81
 jsonファイルのleftTeam,rightTeamをblueTeam,redTeamに変更
@@ -123,6 +129,7 @@ jsonファイルのleftTeam,rightTeamをblueTeam,redTeamに変更
 - ver0.95
 フルスクリーンへの完全対応
 フォントをメイリオから游ゴシックに変更
+
 
 
 <!-- cxfreeze -->

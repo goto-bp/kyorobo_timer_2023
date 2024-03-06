@@ -3,19 +3,13 @@
     "blueTeam": "青チーム",
     "teamNameList": [
         "沖縄A",
-        "沖縄B",
         "鹿児島A",
         "鹿児島B",
         "熊本八代A",
-        "熊本八代B",
-        "熊本熊本A",
         "熊本熊本B",
-        "大分A",
         "大分B",
-        "北九州A",
         "北九州B",
         "久留米A",
-        "久留米B",
         "有明A",
         "有明B"
     ],
@@ -25,7 +19,7 @@
         "sec": 0
     },
     "timerReverse": false,
-    "isSwap": false,
+    "isSwap": true,
     "key": {
         "left": {
             "up": "w",

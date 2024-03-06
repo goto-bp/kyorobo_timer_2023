@@ -89,6 +89,13 @@ class KyoroboTimer:
 
     fullscreenFlag = False
 
+    showCircle = False
+
+    redTeamNameIndex = 0
+    blueTeamNameIndex = 0
+    redTeamNameList = []
+    blueTeamNameList = []
+
     # イベントの共通部分
     def windowEvent(self, event):
         if event.type == QUIT:
@@ -156,6 +163,9 @@ class KyoroboTimer:
         }
         self.__swapKey = pygame.key.key_code(self.__setting["key"]["swap"])
 
+        self.redTeamNameList = [self.__setting["redTeam"]] + self.__setting["teamNameList"]
+        self.blueTeamNameList = [self.__setting["blueTeam"]] + self.__setting["teamNameList"]
+
     # 設定ファイルの保存
     def saveSetting(self):
         try:
@@ -185,10 +195,10 @@ class KyoroboTimer:
 
         self.screen = pygame.Surface((800, 450))
 
-        self.mainWindow = sdl2.Window("main", size=(800, 450), resizable=True)
+        self.mainWindow = sdl2.Window("共ロボタイマー", size=(800, 450), resizable=True)
         self.mainRenderer = sdl2.Renderer(self.mainWindow)
 
-        self.settingWindow = sdl2.Window("setting", size=(800, 450), resizable=True)
+        self.settingWindow = sdl2.Window("設定", size=(400, 225), resizable=True)
         self.settingRenderer = sdl2.Renderer(self.settingWindow)
         self.isShowSetting = False
         self.settingWindow.hide()
@@ -299,10 +309,7 @@ class KyoroboTimer:
                     if event.key == K_SPACE:
                         self.settingWindow.hide()
                         return "countdown"
-                    # if event.key == K_LSHIFT:
-                    #     self.settingWindow.hide()
-                    #     return "setting"
-                    if event.key == K_RSHIFT:
+                    if event.key == K_RSHIFT or event.key == K_LSHIFT:
                         if not self.isShowSetting:
                             self.settingWindow.show()
                             self.isShowSetting = True
@@ -331,12 +338,17 @@ class KyoroboTimer:
                                 self.subFunctionIndex = 3
                             elif self.__cursor["y"] == 3:
                                 self.__setting["isSwap"] = not self.__setting["isSwap"]
+                                self.__swap = self.__setting["isSwap"]
+                                self.__rightTeam["name"], self.__leftTeam["name"] = self.__leftTeam["name"], self.__rightTeam["name"]
                                 self.saveSetting()
                                 self.subChangeSwap = 20
                             elif self.__cursor["y"] == 5:
                                 self.loadSetting()
-                                self.subReloadFile = 20
-                            
+                                self.subReloadFile = 20                        
+                            elif self.__cursor["y"] == 6:
+                                self.__setTime["min"] = self.__time["min"]
+                                self.__setTime["sec"] = self.__time["sec"]
+                                self.subFunctionIndex = 4
                             else:
                                 self.beepLo.play()
                     elif self.subFunctionIndex == 1:
@@ -385,7 +397,21 @@ class KyoroboTimer:
                     elif self.subFunctionIndex == 2:
                         if event.key == K_ESCAPE:
                             self.subFunctionIndex = 0
-                            self.__cursor["y"] = 0
+                        if event.key == K_UP:
+                            self.blueTeamNameIndex -= 1
+                        if event.key == K_DOWN:
+                            self.blueTeamNameIndex += 1
+                        if event.key == K_w:
+                            self.redTeamNameIndex -= 1
+                        if event.key == K_s:
+                            self.redTeamNameIndex += 1
+                        if event.key == K_RETURN:
+                            self.__setting["redTeam"] = self.redTeamNameList[self.redTeamNameIndex]
+                            self.__setting["blueTeam"] = self.blueTeamNameList[self.blueTeamNameIndex]
+                            self.__leftTeam["name"] = self.__setting["redTeam"]
+                            self.__rightTeam["name"] = self.__setting["blueTeam"]
+                            self.saveSetting()
+                            self.subFunctionIndex = 0
                     elif self.subFunctionIndex == 3:
                         if event.key == K_ESCAPE:
                             self.subFunctionIndex = 0
@@ -408,6 +434,38 @@ class KyoroboTimer:
                                 self.__cursor["y"] = 0
                                 self.__cursor["x"] = 0
                                 self.tmpScoreSetting = 0
+                    elif self.subFunctionIndex == 4:
+                        if event.key == K_ESCAPE:
+                            self.__time["min"] = self.__setting["time"]["min"]
+                            self.__time["sec"] = self.__setting["time"]["sec"]
+                            self.__leftTeam["score"] = 0
+                            self.__rightTeam["score"] = 0
+                            self.subFunctionIndex = 0
+                        if event.key == self.__leftKeys["up"]:
+                            self.__leftTeam["score"] += 1
+                        if event.key == self.__leftKeys["down"]:
+                            self.__leftTeam["score"] -= 1
+                        if event.key == self.__leftKeys["nup"]:
+                            self.__leftTeam["score"] += self.__setting["score"]
+                        if event.key == self.__leftKeys["ndown"]:
+                            self.__leftTeam["score"] -= self.__setting["score"]
+                        if event.key == self.__leftKeys["reset"]:
+                            self.__leftTeam["score"] = 0
+
+                        if event.key == self.__rightKeys["up"]:
+                            self.__rightTeam["score"] += 1
+                        if event.key == self.__rightKeys["down"]:
+                            self.__rightTeam["score"] -= 1
+                        if event.key == self.__rightKeys["nup"]:
+                            self.__rightTeam["score"] += self.__setting["score"]
+                        if event.key == self.__rightKeys["ndown"]:
+                            self.__rightTeam["score"] -= self.__setting["score"]
+                        if event.key == self.__rightKeys["reset"]:
+                            self.__rightTeam["score"] = 0
+
+                        if event.key == self.__swapKey:
+                            self.__swap = not self.__swap
+                            self.__leftTeam, self.__rightTeam = self.__rightTeam, self.__leftTeam
 
         if self.subFunctionIndex == 0:
             if self.__cursor["y"] < 0:
@@ -427,6 +485,15 @@ class KyoroboTimer:
                 self.__cursor["x"] = 6
             if self.__cursor["x"] > 6:
                 self.__cursor["x"] = 0
+        elif self.subFunctionIndex == 2:
+            if self.redTeamNameIndex < 0:
+                self.redTeamNameIndex = len(self.redTeamNameList) - 1
+            if self.redTeamNameIndex > len(self.redTeamNameList) - 1:
+                self.redTeamNameIndex = 0
+            if self.blueTeamNameIndex < 0:
+                self.blueTeamNameIndex = len(self.blueTeamNameList) - 1
+            if self.blueTeamNameIndex > len(self.blueTeamNameList) - 1:
+                self.blueTeamNameIndex = 0
         elif self.subFunctionIndex == 3:
             if self.tmpScoreSetting < 0:
                 self.tmpScoreSetting = 0
@@ -434,6 +501,11 @@ class KyoroboTimer:
                 self.__cursor["x"] = 1
             if self.__cursor["x"] > 1:
                 self.__cursor["x"] = 0
+        elif self.subFunctionIndex == 4:
+            if(self.__leftTeam["score"] < 0):
+                self.__leftTeam["score"] = 0
+            if(self.__rightTeam["score"] < 0):
+                self.__rightTeam["score"] = 0
 
         windowsize = self.mainWindow.size
         self.screen = pygame.Surface(windowsize)
@@ -442,35 +514,36 @@ class KyoroboTimer:
         # 背景の描画
         pygame.draw.rect(self.screen, (255, 255, 255), Rect(0, 0, windowsize[0], windowsize[1]))
 
-        if random.random() < 0.05 and len(self.__circleList) < 30:
-            x = random.random()
-            radius = random.uniform(0.5, 1)
-            speed = random.uniform(0.005 / 10, 0.015 / 4)
-            if random.random() < 0.5:
-                self.__circleList.append((x, 0 - radius / 5, True, self.__colorList[random.randint(0, len(self.__colorList) - 1)], speed, radius))
-            else:
-                self.__circleList.append((x, 1 + radius / 5, False, self.__colorList[random.randint(0, len(self.__colorList) - 1)], speed, radius))
-            
-        destIndex = []
-        newCircleList = []
-
-        for i in range(len(self.__circleList)):
-            if self.__circleList[i][2]:
-                self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] + self.__circleList[i][4], True, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
-            else:
-                self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] - self.__circleList[i][4], False, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
-
-            if self.__circleList[i][1] < 0 - self.__circleList[i][5] / 5 or self.__circleList[i][1] > 1 + self.__circleList[i][5] / 5:
-                destIndex.append(i)
-            else:
-                fixColor = (255 if self.__circleList[i][3][0] * self.__changeColor > 255 else self.__circleList[i][3][0] * self.__changeColor,
-                            255 if self.__circleList[i][3][1] * self.__changeColor > 255 else self.__circleList[i][3][1] * self.__changeColor,
-                            255 if self.__circleList[i][3][2] * self.__changeColor > 255 else self.__circleList[i][3][2] * self.__changeColor)
+        if self.showCircle:
+            if random.random() < 0.05 and len(self.__circleList) < 30:
+                x = random.random()
+                radius = random.uniform(0.5, 1)
+                speed = random.uniform(0.005 / 10, 0.015 / 4)
+                if random.random() < 0.5:
+                    self.__circleList.append((x, 0 - radius / 5, True, self.__colorList[random.randint(0, len(self.__colorList) - 1)], speed, radius))
+                else:
+                    self.__circleList.append((x, 1 + radius / 5, False, self.__colorList[random.randint(0, len(self.__colorList) - 1)], speed, radius))
                 
+            destIndex = []
+            newCircleList = []
 
-                pygame.draw.circle(self.screen, fixColor, (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
-                newCircleList.append(self.__circleList[i])
-        self.__circleList = newCircleList
+            for i in range(len(self.__circleList)):
+                if self.__circleList[i][2]:
+                    self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] + self.__circleList[i][4], True, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
+                else:
+                    self.__circleList[i] = (self.__circleList[i][0], self.__circleList[i][1] - self.__circleList[i][4], False, self.__circleList[i][3], self.__circleList[i][4], self.__circleList[i][5])
+
+                if self.__circleList[i][1] < 0 - self.__circleList[i][5] / 5 or self.__circleList[i][1] > 1 + self.__circleList[i][5] / 5:
+                    destIndex.append(i)
+                else:
+                    fixColor = (255 if self.__circleList[i][3][0] * self.__changeColor > 255 else self.__circleList[i][3][0] * self.__changeColor,
+                                255 if self.__circleList[i][3][1] * self.__changeColor > 255 else self.__circleList[i][3][1] * self.__changeColor,
+                                255 if self.__circleList[i][3][2] * self.__changeColor > 255 else self.__circleList[i][3][2] * self.__changeColor)
+                    
+
+                    pygame.draw.circle(self.screen, fixColor, (self.__circleList[i][0] * windowsize[0], self.__circleList[i][1] * windowsize[1]), int(windowsize[0] * self.__circleList[i][5] / 10) )
+                    newCircleList.append(self.__circleList[i])
+            self.__circleList = newCircleList
 
         if self.__changeColor > 1:
             self.__changeColor -= 0.1
@@ -486,7 +559,6 @@ class KyoroboTimer:
             subWindowsize = self.settingWindow.size
             
             textureList = []
-            self.settingRenderer.clear()
             for i in range(len(settingElem)):
                 font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / (10 + len(settingElem))))
                 text = font.render(settingElem[i], True, (0, 0, 0))
@@ -516,7 +588,7 @@ class KyoroboTimer:
 
                 text = ""
                 font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
-                if self.__setting["isSwap"]:
+                if not self.__setting["isSwap"]:
                     orginText = "左:青　 右:赤"
                     orginText = font.render(orginText, True, (0,0,255))
                     orginText = sdl2.Texture.from_surface(self.settingRenderer, orginText)
@@ -566,12 +638,8 @@ class KyoroboTimer:
                 text = sdl2.Texture.from_surface(self.settingRenderer, text)
                 text.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - text.get_rect().width / 2, subWindowsize[1] / 2 + text.get_rect().height / 2, text.get_rect().width, text.get_rect().height))
 
-            self.settingRenderer.present()
-
         def subTimerSetting():
             subWindowsize = self.settingWindow.size
-
-            self.settingRenderer.clear()
 
             timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(subWindowsize[1] / 2 - subWindowsize[1] / 5))
             charList = [int(self.__settingTime["min"] / 10), self.__settingTime["min"] % 10, ":", int(self.__settingTime["sec"] / 10), self.__settingTime["sec"] % 10]
@@ -613,22 +681,44 @@ class KyoroboTimer:
                                           subWindowsize[1] * 3 / 4 - text.get_rect().height / 2,
                                           text.get_rect().width, text.get_rect().height))
 
-            self.settingRenderer.present()
-
         def subTeamNameSetting():
-            self.settingRenderer.clear()
 
-            text = self.__setting["redTeam"] + " vs " + self.__setting["blueTeam"]
-            font = pygame.font.SysFont(self.__setting["font"], int(windowsize[1] / 10))
+            subWindowsize = self.settingWindow.size 
+            subScreen = pygame.Surface(subWindowsize)
+
+            subScreen.fill((255, 255, 255))
+
+            text = "赤チーム"
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
             text = font.render(text, True, (0,0,0))
-            text = sdl2.Texture.from_surface(self.settingRenderer, text)
-            text.draw(dstrect=pygame.Rect(windowsize[0] / 2 - text.get_rect().width / 2, windowsize[1] / 2 - text.get_rect().height / 2, text.get_rect().width, text.get_rect().height))
+            subScreen.blit(text, (subWindowsize[0] * 2 / 7 - text.get_rect().width / 2, subWindowsize[1] / 6 - text.get_rect().height / 2))
 
-            self.settingRenderer.present()
+            text = "青チーム"
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
+            text = font.render(text, True, (0,0,0))
+            subScreen.blit(text, (subWindowsize[0] * 5 / 7 - text.get_rect().width / 2, subWindowsize[1] / 6 - text.get_rect().height / 2))
+
+            text = self.redTeamNameList[self.redTeamNameIndex]
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
+            text = font.render(text, True, (0,0,0))
+            subScreen.blit(text, (subWindowsize[0] * 2 / 7 - text.get_rect().width / 2, subWindowsize[1] * 3 / 6 - text.get_rect().height / 2))
+
+            text = self.blueTeamNameList[self.blueTeamNameIndex]
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
+            text = font.render(text, True, (0,0,0))
+            subScreen.blit(text, (subWindowsize[0] * 5 / 7 - text.get_rect().width / 2, subWindowsize[1] * 3 / 6 - text.get_rect().height / 2))
+
+            text = "保存"
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10))
+            text = font.render(text, True, (0,0,0))
+            subScreen.blit(text, (subWindowsize[0] / 2 - text.get_rect().width / 2, subWindowsize[1] * 5 / 6 - text.get_rect().height / 2))
+
+            pygame.draw.rect(subScreen, (0, 0, 0), Rect(subWindowsize[0] / 2 - text.get_rect().width / 2 - 10, subWindowsize[1] * 5 / 6 - text.get_rect().height / 2 - 10, text.get_rect().width + 20, text.get_rect().height + 20), 2)
+
+            tex = sdl2.Texture.from_surface(self.settingRenderer, subScreen)
+            tex.draw()
 
         def subScoreSetting():
-            self.settingRenderer.clear()
-
             subWindowsize = self.settingWindow.size
 
             text = "一度に増やすスコア"
@@ -663,30 +753,91 @@ class KyoroboTimer:
             
             settingSurface = self.settingRenderer.to_surface()
 
-            pygame.draw.polygon(settingSurface, (0,0,0), [(subWindowsize[0] / 2 - text.get_rect().width / 2, subWindowsize[1] / 2),
-                                                                (subWindowsize[0] / 2 - text.get_rect().width / 2 - text.get_rect().height, subWindowsize[1] / 2 + text.get_rect().height),
-                                                                (subWindowsize[0] / 2 - text.get_rect().width / 2 + text.get_rect().height, subWindowsize[1] / 2 + text.get_rect().height / 2)])
-            pygame.draw.polygon(settingSurface, (0,0,0), [(subWindowsize[0] / 2 + text.get_rect().width / 2 + text.get_rect().height, subWindowsize[1] / 2),
-                                                                (subWindowsize[0] / 2 + text.get_rect().width / 2 + text.get_rect().height, subWindowsize[1] / 2 + text.get_rect().height),
-                                                                (subWindowsize[0] / 2 + text.get_rect().width / 2 + text.get_rect().height * 2, subWindowsize[1] / 2 + text.get_rect().height / 2)])
+            if self.__cursor["x"] == 0:
+                polygonColor = (255,0,0)
+            else:
+                polygonColor = (0,0,0)
+
+            pygame.draw.polygon(settingSurface, polygonColor, [  (subWindowsize[0] / 2 - subWindowsize[0] / 10, subWindowsize[1] / 2),
+                                                            (subWindowsize[0] / 2 - subWindowsize[0] / 20 , subWindowsize[1] / 2  - subWindowsize[0] / 40),
+                                                            (subWindowsize[0] / 2 - subWindowsize[0] / 20 , subWindowsize[1] / 2  + subWindowsize[0] / 40)])
+            pygame.draw.polygon(settingSurface, polygonColor, [  (subWindowsize[0] / 2 + subWindowsize[0] / 10, subWindowsize[1] / 2),
+                                                            (subWindowsize[0] / 2 + subWindowsize[0] / 20 , subWindowsize[1] / 2  - subWindowsize[0] / 40),
+                                                            (subWindowsize[0] / 2 + subWindowsize[0] / 20 , subWindowsize[1] / 2  + subWindowsize[0] / 40)])
             tex = sdl2.Texture.from_surface(self.settingRenderer, settingSurface)
             tex.draw()
-                                                                
-            
-            self.settingRenderer.present()
 
-        def test():
-            self.settingRenderer.clear()
-
+        def subPreview():
             subWindowsize = self.settingWindow.size
+            subScreen = pygame.Surface(subWindowsize)
 
-            tex = sdl2.Texture.from_surface(self.settingRenderer, self.screen)
-            tex.draw(dstrect=pygame.Rect(0, 0, subWindowsize[0], subWindowsize[1]))
-            self.settingRenderer.present()
+            if(self.__leftTeam["score"] < 0):
+                self.__leftTeam["score"] = 0
+            if(self.__rightTeam["score"] < 0):
+                self.__rightTeam["score"] = 0
 
-        subFunctionList = [subSetting, subTimerSetting, subTeamNameSetting, subScoreSetting]
+            # 背景の描画
+            pygame.draw.rect(subScreen, (0, 0, 0), Rect(0, 0, subWindowsize[0], subWindowsize[1]))
 
+            if self.__swap:
+                leftColor = self.__Red
+                rightColor = self.__Blue
+            else:
+                leftColor = self.__Blue
+                rightColor = self.__Red
+
+            pygame.draw.rect(subScreen, leftColor, Rect(0, 0, subWindowsize[0] / 2, subWindowsize[1] * 4 / 10))
+            pygame.draw.rect(subScreen, rightColor, Rect(subWindowsize[0] / 2, 0, subWindowsize[0] / 2, subWindowsize[1] * 4 / 10))
+            pygame.draw.rect(subScreen, (20, 20, 20), Rect(0, subWindowsize[1] * 4 / 10, subWindowsize[0], subWindowsize[1] / 10))
+
+            # タイマーの描画
+            if not self.__setting["timerReverse"]:
+                now = self.__time["min"] * 60 + self.__time["sec"]
+                first = self.__setTime["min"] * 60 + self.__setTime["sec"]
+                min = int((first - now) / 60)
+                sec = int((first - now) % 60)
+                time = str(min) + ":" + str(sec).zfill(2)
+            else:
+                time = str(self.__time["min"]) + ":" + str(self.__time["sec"]).zfill(2)
+            # timerFont = pygame.font.Font(object(self.__timerFontObject), int(subWindowsize[1] / 2 - subWindowsize[1] / 10))
+            timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(subWindowsize[1] / 2 - subWindowsize[1] / 10))
+
+            if self.__time["min"] == 0 and self.__time["sec"] == 0:
+                timerText = timerFont.render(time, True, self.__Red)
+            else:
+                timerText = timerFont.render(time, True, (255, 255, 255))
+            subScreen.blit(timerText, (subWindowsize[0] / 2 - timerText.get_width() / 2, subWindowsize[1] * 3 / 4 - timerText.get_height() / 2))
+
+            # スコアの描画
+            scoreFont = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] * 4 / 10))
+
+            leftTeamText = scoreFont.render(str(self.__leftTeam["score"]), True, (255, 255, 255))
+            rightTeamText = scoreFont.render(str(self.__rightTeam["score"]), True, (255, 255, 255))
+            subScreen.blit(leftTeamText, (subWindowsize[0] / 4 - leftTeamText.get_width() / 2, subWindowsize[1] * 4 / 20 - leftTeamText.get_height() / 2))
+            subScreen.blit(rightTeamText, (subWindowsize[0] * 3 / 4 - rightTeamText.get_width() / 2, subWindowsize[1] * 4 / 20 - rightTeamText.get_height() / 2))
+
+            # チーム名の描画
+            font = pygame.font.SysFont(self.__setting["font"], int(subWindowsize[1] / 10 - (subWindowsize[1] / 10) / 4))
+
+            leftTeamName = font.render(self.__leftTeam["name"], True, (255, 255, 255))
+            rightTeamName = font.render(self.__rightTeam["name"], True, (255, 255, 255))
+
+            if leftTeamName.get_width() > subWindowsize[0] / 2:
+                leftTeamName = pygame.transform.scale(leftTeamName, (int(subWindowsize[0] / 2), int(leftTeamName.get_height() * (subWindowsize[0] / 2) / leftTeamName.get_width())))
+            if rightTeamName.get_width() > subWindowsize[0] / 2:
+                rightTeamName = pygame.transform.scale(rightTeamName, (int(subWindowsize[0] / 2), int(rightTeamName.get_height() * (subWindowsize[0] / 2) / rightTeamName.get_width())))
+
+            subScreen.blit(leftTeamName, (subWindowsize[0] / 4 - leftTeamName.get_width() / 2, subWindowsize[1] * 9 / 20 - leftTeamName.get_height() / 2))
+            subScreen.blit(rightTeamName, (subWindowsize[0] * 3 / 4 - rightTeamName.get_width() / 2, subWindowsize[1] * 9 / 20 - rightTeamName.get_height() / 2))
+
+            tex = sdl2.Texture.from_surface(self.settingRenderer, subScreen)
+            tex.draw()
+
+        subFunctionList = [subSetting, subTimerSetting, subTeamNameSetting, subScoreSetting, subPreview]
+
+        self.settingRenderer.clear()
         subFunctionList[self.subFunctionIndex]()
+        self.settingRenderer.present()
 
         return ""
 
