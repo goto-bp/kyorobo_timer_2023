@@ -98,6 +98,7 @@ class KyoroboTimer:
 
     # イベントの共通部分
     def windowEvent(self, event):
+        self.broadcastWindow.size = self.mainWindow.size
         if event.type == QUIT:
             sys.exit()
         if getattr(event, "window", None) == self.settingWindow:
@@ -111,13 +112,18 @@ class KyoroboTimer:
                     sys.exit()
                 if event.type == WINDOWFOCUSGAINED:
                     self.forcusWindow = "main"
+        elif getattr(event, "window", None) == self.broadcastWindow:
+                if event.type == WINDOWFOCUSGAINED:
+                    self.forcusWindow = "main"
         if self.forcusWindow == "main":
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     if self.fullscreenFlag:
+                        self.broadcastWindow.set_windowed()
                         self.mainWindow.set_windowed()
                         self.fullscreenFlag = False
                     else:
+                        self.broadcastWindow.set_fullscreen(True)
                         self.mainWindow.set_fullscreen(True)
                         self.fullscreenFlag = True
                     
@@ -204,11 +210,20 @@ class KyoroboTimer:
         self.settingWindow.hide()
         self.settingRenderer.draw_color = (255, 255, 255, 255)
 
+        self.broadcastWindow = sdl2.Window("放送用", size=(800, 450), resizable=True)
+        self.broadcastRenderer = sdl2.Renderer(self.broadcastWindow)
+        self.isShowBroadcast = True
+        # self.broadcastWindow.hide()
+        self.broadcastRenderer.draw_color = (0, 0, 255, 255)
+        self.broadcastRenderer.clear()
+        self.broadcastRenderer.present()
+
         # アイコンの読み込み
         try:
             self.__icon = pygame.image.load("img/icon.png")
             self.mainWindow.set_icon(self.__icon)
             self.settingWindow.set_icon(self.__icon)
+            self.broadcastWindow.set_icon(self.__icon)
         except Exception as e:
             print("アイコンの読み込みに失敗しました。")
             print(e)
@@ -245,6 +260,7 @@ class KyoroboTimer:
         
         while True:
             self.mainRenderer.clear()
+            self.broadcastRenderer.clear()
             
             code = nowFunction()
 
@@ -270,6 +286,7 @@ class KyoroboTimer:
             tex = sdl2.Texture.from_surface(self.mainRenderer, self.screen)
             tex.draw()
             self.mainRenderer.present()
+            self.broadcastRenderer.present()
 
             pygame.time.wait(30)
 
@@ -581,8 +598,8 @@ class KyoroboTimer:
             if self.subChangeSwap > 0:
                 self.subChangeSwap -= 1
 
-                pygame.draw.rect(settingSurface, (255, 255, 255), Rect(subWindowsize[0] / 5, subWindowsize[1] / 5, 
-                                                                       subWindowsize[0] * 4 / 5, subWindowsize[1] * 4 / 5))
+                pygame.draw.rect(settingSurface, (255, 255, 255), Rect(subWindowsize[0] / 10, subWindowsize[1] / 10, 
+                                                                       subWindowsize[0] * 9 / 10, subWindowsize[1] * 9 / 10))
                 tex = sdl2.Texture.from_surface(self.settingRenderer, settingSurface)
                 tex.draw()
 
@@ -592,40 +609,34 @@ class KyoroboTimer:
                     orginText = "左:青　 右:赤"
                     orginText = font.render(orginText, True, (0,0,255))
                     orginText = sdl2.Texture.from_surface(self.settingRenderer, orginText)
-                    text1 = "左:"
-                    text1 = font.render(text1, True, (255,0,0))
+                    text1 = "左:青　"
+                    text1 = font.render(text1, True, (0,0,255))
                     text1 = sdl2.Texture.from_surface(self.settingRenderer, text1)
                     text1.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - orginText.get_rect().width / 2,
                                                   subWindowsize[1] / 2 - text1.get_rect().height / 2,
                                                   text1.get_rect().width, text1.get_rect().height))
                     
                     
-                    text2 = "青"
-                    text2 = font.render(text2, True, (0,0,255))
+                    text2 = "右:赤"
+                    text2 = font.render(text2, True, (255,0,0))
                     text2 = sdl2.Texture.from_surface(self.settingRenderer, text2)
                     text2.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - orginText.get_rect().width / 2 + text1.get_rect().width,
                                                   subWindowsize[1] / 2 - text2.get_rect().height / 2,
                                                   text2.get_rect().width, text2.get_rect().height))
 
-                    text3 = "　右:赤"
-                    text3 = font.render(text3, True, (255,0,0))
-                    text3 = sdl2.Texture.from_surface(self.settingRenderer, text3)
-                    text3.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - orginText.get_rect().width / 2 + text1.get_rect().width + text2.get_rect().width,
-                                                   subWindowsize[1] / 2 - text3.get_rect().height / 2,
-                                                   text3.get_rect().width, text3.get_rect().height))
                 else:
                     orginText = "左:赤　右:青"
                     orginText = font.render(orginText, True, (255,0,0))
                     orginText = sdl2.Texture.from_surface(self.settingRenderer, orginText)
 
-                    text1 = "左:赤　 右:"
+                    text1 = "左:赤　 "
                     text1 = font.render(text1, True, (255,0,0))
                     text1 = sdl2.Texture.from_surface(self.settingRenderer, text1)
                     text1.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - orginText.get_rect().width / 2,
                                                     subWindowsize[1] / 2 - text1.get_rect().height / 2,
                                                     text1.get_rect().width, text1.get_rect().height))
                     
-                    text2 = "青"
+                    text2 = "右:青"
                     text2 = font.render(text2, True, (0,0,255))
                     text2 = sdl2.Texture.from_surface(self.settingRenderer, text2)
                     text2.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - orginText.get_rect().width / 2 + text1.get_rect().width,
@@ -634,7 +645,7 @@ class KyoroboTimer:
                 
 
                 text = "に変更しました"
-                text = font.render(text, True, (255,0,0))
+                text = font.render(text, True, (0,0,0))
                 text = sdl2.Texture.from_surface(self.settingRenderer, text)
                 text.draw(dstrect=pygame.Rect(subWindowsize[0] / 2 - text.get_rect().width / 2, subWindowsize[1] / 2 + text.get_rect().height / 2, text.get_rect().width, text.get_rect().height))
 
@@ -1014,6 +1025,43 @@ class KyoroboTimer:
 
         self.screen.blit(leftTeamName, (windowSise[0] / 4 - leftTeamName.get_width() / 2, windowSise[1] * 9 / 20 - leftTeamName.get_height() / 2))
         self.screen.blit(rightTeamName, (windowSise[0] * 3 / 4 - rightTeamName.get_width() / 2, windowSise[1] * 9 / 20 - rightTeamName.get_height() / 2))
+
+
+        broadcastWindowsize = self.broadcastWindow.size
+        broadcastSurface = pygame.Surface(broadcastWindowsize)
+
+        pygame.draw.rect(broadcastSurface, (0, 0, 255), Rect(0, 0, broadcastWindowsize[0], broadcastWindowsize[1]))
+
+        pygame.draw.rect(broadcastSurface, (100, 100, 255), Rect(0, 0, broadcastWindowsize[0] / 5, broadcastWindowsize[1] / 5))
+        pygame.draw.rect(broadcastSurface, (255, 100, 100), Rect(broadcastWindowsize[0] - broadcastWindowsize[0] / 5, 0, broadcastWindowsize[0] / 5, broadcastWindowsize[1] / 5))
+        pygame.draw.rect(broadcastSurface, (20, 20, 20), Rect(0, broadcastWindowsize[1] * 4 / 30, broadcastWindowsize[0] / 5, broadcastWindowsize[1] * 2 / 30))
+        pygame.draw.rect(broadcastSurface, (20, 20, 20), Rect(broadcastWindowsize[0] - broadcastWindowsize[0] / 5, broadcastWindowsize[1] * 4 / 30, broadcastWindowsize[0] / 5, broadcastWindowsize[1] * 2 / 30))
+        
+        pygame.draw.rect(broadcastSurface, (0, 0, 0), Rect((broadcastWindowsize[0] - (broadcastWindowsize[0] / 3)) / 2, 0, broadcastWindowsize[0] / 3, broadcastWindowsize[1] / 6))
+
+        scoreFont = pygame.font.SysFont(self.__setting["font"], int(broadcastWindowsize[1] * 4 / 30))
+        leftTeamText = scoreFont.render(str(self.__leftTeam["score"]), True, (255, 255, 255))
+        rightTeamText = scoreFont.render(str(self.__rightTeam["score"]), True, (255, 255, 255))
+        broadcastSurface.blit(leftTeamText, (broadcastWindowsize[0] / 10 - leftTeamText.get_width() / 2, broadcastWindowsize[1] * 4 / 60 - leftTeamText.get_height() / 2))
+        broadcastSurface.blit(rightTeamText, (broadcastWindowsize[0] * 9 / 10 - rightTeamText.get_width() / 2, broadcastWindowsize[1] * 4 / 60 - rightTeamText.get_height() / 2))
+
+        font = pygame.font.SysFont(self.__setting["font"], int(broadcastWindowsize[1] * 2 / 30))
+        leftTeamName = font.render(self.__leftTeam["name"], True, (255, 255, 255))
+        rightTeamName = font.render(self.__rightTeam["name"], True, (255, 255, 255))
+        broadcastSurface.blit(leftTeamName, (broadcastWindowsize[0] / 10 - leftTeamName.get_width() / 2, broadcastWindowsize[1] * 4 / 30 + broadcastWindowsize[1] * 2 / 60 - leftTeamName.get_height() / 2))
+        broadcastSurface.blit(rightTeamName, (broadcastWindowsize[0] * 9 / 10 - rightTeamName.get_width() / 2, broadcastWindowsize[1] * 4 / 30 + broadcastWindowsize[1] * 2 / 60 - rightTeamName.get_height() / 2))
+
+        timerFont = pygame.font.Font("font/DSEG7Classic-Bold.ttf", int(broadcastWindowsize[1] / 6 - broadcastWindowsize[1] / 30))
+        if self.__time["min"] == 0 and self.__time["sec"] == 0:
+            timerText = timerFont.render(time, True, (255, 100, 100))
+        else:
+            timerText = timerFont.render(time, True, (255, 255, 255))
+        broadcastSurface.blit(timerText, (broadcastWindowsize[0] / 2 - timerText.get_width() / 2, broadcastWindowsize[1] / 12 - timerText.get_height() / 2))
+
+                                           
+
+        tex = sdl2.Texture.from_surface(self.broadcastRenderer, broadcastSurface)
+        tex.draw()
 
         return ""
 
